@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import Board from './components/Board'
+import ProjectDetail from './components/ProjectDetail'
 
 export default function App() {
   // 当前在右侧面板里打开的项目；null 表示没有打开
-  const [, setOpenProjectId] = useState<string | null>(null)
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null)
 
   return (
     <div className="flex h-screen flex-col text-ink">
@@ -14,6 +15,8 @@ export default function App() {
       <main className="min-h-0 flex-1">
         <Board onOpenProject={setOpenProjectId} />
       </main>
+
+      <ProjectDetail projectId={openProjectId} onClose={() => setOpenProjectId(null)} />
     </div>
   )
 }
