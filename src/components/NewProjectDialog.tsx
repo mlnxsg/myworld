@@ -109,7 +109,7 @@ function NewProjectForm({
           value={hunch}
           onChange={(e) => setHunch(e.target.value)}
         />
-        <p className="text-xs text-muted-foreground">写下后不能修改，复盘时会原样给你看。</p>
+        <p className="text-xs text-muted-foreground">写下后不能修改，复盘时会原样给你看。之后还可以继续追加。</p>
       </div>
 
       <DialogFooter>

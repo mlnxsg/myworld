@@ -4,7 +4,7 @@ export interface Project {
   id: string
   name: string
   estimatedTotal?: number // 预估总工作量分数，选填；没填时计算按 0 处理
-  hunch?: { content: string; createdAt: number } // 直觉预判，选填；填写后不可修改
+  hunches?: Hunch[] // 直觉预判，可以有很多条；写下的每一条都不可修改
   x: number // 白板上的位置
   y: number
   z?: number // 层级：存的是最近一次拖动的时间，越大越靠上
@@ -12,6 +12,12 @@ export interface Project {
   createdAt: number
   archivedAt?: number
   retro?: Retro
+}
+
+// 一条直觉预判
+export interface Hunch {
+  content: string
+  createdAt: number
 }
 
 export interface Retro {
@@ -43,7 +49,7 @@ export interface Note {
 // 导出 / 导入用的 JSON 文件格式
 export interface BackupFile {
   app: 'myworld'
-  version: 1 // 以后数据结构变了就加 1，导入时可以据此做转换
+  version: 2 // 数据结构变了就加 1。版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表
   exportedAt: number
   projects: Project[]
   tasks: Task[]

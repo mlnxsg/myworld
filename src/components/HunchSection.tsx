@@ -1,21 +1,28 @@
-// 项目详情里的"直觉预判"部分：只能写一次，写下后不能修改。
+// 项目详情里的"直觉预判"部分：可以写很多条，但写下的每一条都不能修改或删除。
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { setHunch } from '@/db'
+import { addHunch } from '@/db'
 import { formatDateTime } from '@/lib/format'
-import type { Project } from '@/types'
+import type { Hunch, Project } from '@/types'
 
-// 已经写下的预判：一段引用样式的文字。复盘框和归档区也用它。
-export function HunchQuote({ hunch }: { hunch: NonNullable<Project['hunch']> }) {
+// 已经写下的预判，按时间从早到晚排列。复盘框和归档区也用它。
+// 一条都没有时什么也不显示。
+export function HunchList({ hunches }: { hunches?: Hunch[] }) {
+  if (!hunches || hunches.length === 0) return null
+
   return (
-    <blockquote className="border-l-2 border-gold pl-3">
-      <p className="font-heading text-sm whitespace-pre-wrap italic">{hunch.content}</p>
-      <footer className="mt-1 text-xs text-ink/40 tabular-nums">
-        当初的直觉 · {formatDateTime(hunch.createdAt)}
-      </footer>
-    </blockquote>
+    <ul className="grid gap-3">
+      {hunches.map((hunch) => (
+        <li key={hunch.createdAt} className="border-l-2 border-gold pl-3">
+          <p className="font-heading text-sm whitespace-pre-wrap">{hunch.content}</p>
+          <time className="mt-1 block text-xs text-ink/40 tabular-nums">
+            {formatDateTime(hunch.createdAt)}
+          </time>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -27,42 +34,42 @@ export default function HunchSection({
   readOnly: boolean
 }) {
   const [content, setContent] = useState('')
+  const hasHunches = project.hunches !== undefined && project.hunches.length > 0
 
-  if (project.hunch) {
-    return (
-      <section>
-        <h3 className="mb-2 font-heading text-base font-semibold">直觉预判</h3>
-        <HunchQuote hunch={project.hunch} />
-      </section>
-    )
-  }
-
-  // 没写过，而且是只读（已归档）：这一块就不显示了
-  if (readOnly) return null
+  // 一条都没写过，而且是只读（已归档）：这一块就不显示了
+  if (readOnly && !hasHunches) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (content.trim() === '') return
-    await setHunch(project.id, content.trim())
+    await addHunch(project.id, content.trim())
+    setContent('')
   }
 
   return (
-    <section>
-      <h3 className="mb-2 font-heading text-base font-semibold">直觉预判</h3>
-      <form onSubmit={handleSubmit} className="grid gap-2">
-        <Textarea
-          rows={2}
-          placeholder="我觉得这件事会怎么发展？最大的坑在哪？"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-ink/40">写下后不能修改</span>
-          <Button type="submit" size="sm" variant="outline" disabled={content.trim() === ''}>
-            写下
-          </Button>
-        </div>
-      </form>
+    <section className="grid gap-3">
+      <h3 className="font-heading text-base font-semibold">直觉预判</h3>
+
+      <HunchList hunches={project.hunches} />
+
+      {!readOnly && (
+        <form onSubmit={handleSubmit} className="grid gap-2">
+          <Textarea
+            rows={2}
+            placeholder={
+              hasHunches ? '又有新的直觉？再记一条…' : '我觉得这件事会怎么发展？最大的坑在哪？'
+            }
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-ink/40">写下后不能修改</span>
+            <Button type="submit" size="sm" variant="outline" disabled={content.trim() === ''}>
+              写下
+            </Button>
+          </div>
+        </form>
+      )}
     </section>
   )
 }

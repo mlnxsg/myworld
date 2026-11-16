@@ -6,7 +6,7 @@ import { restoreProject, useAllTasks, useProjects } from '@/db'
 import { formatDate } from '@/lib/format'
 import { calcProgress } from '@/progress'
 import type { Project, Task } from '@/types'
-import { HunchQuote } from './HunchSection'
+import { HunchList } from './HunchSection'
 import RetroDialog from './RetroDialog'
 
 interface Props {
@@ -73,7 +73,7 @@ function ArchivedCard({
         </p>
       </header>
 
-      {project.hunch && <HunchQuote hunch={project.hunch} />}
+      <HunchList hunches={project.hunches} />
 
       {hasRetro ? (
         <dl className="grid gap-2 text-sm">

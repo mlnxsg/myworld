@@ -4,7 +4,7 @@
 
 import Dexie, { type EntityTable } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
-import type { BackupFile, Note, Project, Retro, Score, Task } from './types'
+import type { BackupFile, Hunch, Note, Project, Retro, Score, Task } from './types'
 
 const db = new Dexie('myworld') as Dexie & {
   projects: EntityTable<Project, 'id'>
@@ -18,6 +18,24 @@ db.version(1).stores({
   tasks: 'id, projectId',
   notes: 'id, projectId',
 })
+
+// 版本 2：直觉预判从"只有一条"（hunch）改成"可以很多条"（hunches）。
+// 表的索引没变，只需要把已有的项目转换一下。
+db.version(2).upgrade((tx) =>
+  tx
+    .table('projects')
+    .toCollection()
+    .modify((project) => upgradeProject(project)),
+)
+
+// 把旧格式的项目改成新格式：hunch（一条）→ hunches（列表）。已经是新格式的不受影响。
+// 数据库升级和导入旧备份文件时都会用到。
+function upgradeProject(project: Project & { hunch?: Hunch }): void {
+  if (project.hunch) {
+    project.hunches = [project.hunch]
+    delete project.hunch
+  }
+}
 
 function newId(): string {
   return crypto.randomUUID()
@@ -72,7 +90,7 @@ export async function createProject(input: {
     id: newId(),
     name: input.name,
     estimatedTotal: input.estimatedTotal,
-    hunch: input.hunch ? { content: input.hunch, createdAt: now } : undefined,
+    hunches: input.hunch ? [{ content: input.hunch, createdAt: now }] : [],
     x: input.x,
     y: input.y,
     z: now,
@@ -90,11 +108,12 @@ export async function setEstimatedTotal(id: string, estimatedTotal?: number): Pr
   await db.projects.update(id, { estimatedTotal })
 }
 
-// 直觉预判只能写一次：已经有了就不再改动
-export async function setHunch(id: string, content: string): Promise<void> {
+// 直觉预判只能往后追加，没有修改和删除的函数
+export async function addHunch(id: string, content: string): Promise<void> {
   const project = await db.projects.get(id)
-  if (!project || project.hunch) return
-  await db.projects.update(id, { hunch: { content, createdAt: Date.now() } })
+  if (!project) return
+  const hunches = [...(project.hunches ?? []), { content, createdAt: Date.now() }]
+  await db.projects.update(id, { hunches })
 }
 
 export async function moveProject(id: string, x: number, y: number): Promise<void> {
@@ -165,7 +184,7 @@ export async function deleteNote(id: string): Promise<void> {
 export async function exportAll(): Promise<BackupFile> {
   return {
     app: 'myworld',
-    version: 1,
+    version: 2,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
@@ -179,11 +198,16 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      data.version === 1 &&
+      (data.version === 1 || data.version === 2) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes)
-    return looksRight ? (data as BackupFile) : null
+    if (!looksRight) return null
+
+    // 旧版本的备份也能导入：先转换成现在的格式
+    data.projects.forEach(upgradeProject)
+    data.version = 2
+    return data as BackupFile
   } catch {
     return null
   }

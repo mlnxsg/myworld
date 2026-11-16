@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { archiveProject, saveRetro } from '@/db'
 import type { Project } from '@/types'
-import { HunchQuote } from './HunchSection'
+import { HunchList } from './HunchSection'
 
 interface Props {
   project: Project | null // null 表示弹窗关闭
@@ -86,7 +86,7 @@ function RetroForm({
       </DialogHeader>
 
       {/* 把当初的直觉原样摆出来，对照实际结果 */}
-      {project.hunch && <HunchQuote hunch={project.hunch} />}
+      <HunchList hunches={project.hunches} />
 
       <div className="grid gap-1.5">
         <Label htmlFor="retro-learned">这次学到了什么？</Label>
