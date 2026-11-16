@@ -203,6 +203,30 @@ export async function importAll(backup: BackupFile): Promise<void> {
   markBackedUp()
 }
 
+// ---------- 自动备份 ----------
+
+// 把全部数据发给开发服务器，由它存成硬盘上的文件（见项目根目录的 backup-plugin.ts）。
+// 成功返回 true。失败不会报错，只是返回 false，下次再试。
+export async function autoBackup(): Promise<boolean> {
+  const backup = await exportAll()
+
+  // 数据是空的就不备份。万一哪天浏览器数据丢了，不能让一份空白盖掉当天的好备份。
+  if (backup.projects.length === 0 && backup.notes.length === 0) return false
+
+  try {
+    const response = await fetch('/api/backup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(backup),
+    })
+    if (!response.ok) return false
+    markBackedUp()
+    return true
+  } catch {
+    return false // 比如开发服务器没开
+  }
+}
+
 // ---------- 备份提醒 ----------
 // "上次备份的时间"不属于项目数据，只是这个浏览器自己的一个小记录，
 // 所以放在 localStorage 里（一个简单的"名字 → 文字"小仓库），不进 IndexedDB，也不会被导出。
@@ -215,7 +239,7 @@ export function getLastBackupAt(): number | null {
   return saved ? Number(saved) : null
 }
 
-// 记下"现在刚备份过"。导出文件后调用。
+// 记下"现在刚备份过"。手动导出或自动备份成功后调用。
 export function markBackedUp(): void {
   localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
 }

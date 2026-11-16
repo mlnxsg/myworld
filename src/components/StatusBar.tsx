@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getLastBackupAt } from '@/db'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatTime } from '@/lib/format'
 
 const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
 
@@ -25,7 +25,7 @@ export default function StatusBar() {
 
   let backupText: string
   if (daysSince === null) backupText = '还没备份过'
-  else if (daysSince === 0) backupText = '上次备份：今天'
+  else if (daysSince === 0) backupText = `上次备份：${formatTime(lastBackupAt!)}`
   else backupText = `上次备份：${daysSince} 天前`
 
   const needsBackup = daysSince === null || daysSince >= REMIND_AFTER_DAYS

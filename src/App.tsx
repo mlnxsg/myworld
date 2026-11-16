@@ -1,17 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ArchiveView from './components/ArchiveView'
 import Board from './components/Board'
 import DataButtons from './components/DataButtons'
 import ProjectDetail from './components/ProjectDetail'
 import StatusBar from './components/StatusBar'
+import { autoBackup } from './db'
 
 type View = 'board' | 'archive'
+
+// 每隔多久自动备份一次
+const BACKUP_EVERY = 10 * 60 * 1000 // 10 分钟
 
 export default function App() {
   // 当前显示白板还是归档区
   const [view, setView] = useState<View>('board')
   // 当前在右侧面板里打开的项目；null 表示没有打开
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
+
+  // 自动备份：打开页面时备份一次，之后每 10 分钟一次
+  useEffect(() => {
+    autoBackup()
+    const timer = setInterval(autoBackup, BACKUP_EVERY)
+    return () => clearInterval(timer)
+  }, [])
 
   return (
     <div className="flex h-screen flex-col text-ink">
