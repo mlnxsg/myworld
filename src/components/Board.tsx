@@ -13,7 +13,7 @@ interface Props {
 const FOLDER_WIDTH = 176
 const FOLDER_HEIGHT = 100
 // 白板比最远的文件夹再多出这么多空白，方便继续往外摆
-const EXTRA_SPACE = 400
+const EXTRA_SPACE = 260
 
 export default function Board({ onOpenProject }: Props) {
   const projects = useProjects('active')

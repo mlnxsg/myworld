@@ -25,6 +25,7 @@ import { calcProgress } from '@/progress'
 import HunchSection from './HunchSection'
 import NoteList from './NoteList'
 import ProgressBar from './ProgressBar'
+import RetroDialog from './RetroDialog'
 import TaskList from './TaskList'
 
 interface Props {
@@ -47,6 +48,7 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
   const tasks = useTasks(projectId)
   const notes = useNotes(projectId)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [archiving, setArchiving] = useState(false)
 
   if (!project) return null
 
@@ -164,8 +166,18 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
           >
             删除项目
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setArchiving(true)}>
+            归档
+          </Button>
         </footer>
       )}
+
+      <RetroDialog
+        project={archiving ? project : null}
+        mode="archive"
+        onClose={() => setArchiving(false)}
+        onArchived={onClose}
+      />
 
       <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
         <AlertDialogContent>

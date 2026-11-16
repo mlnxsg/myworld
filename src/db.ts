@@ -101,8 +101,10 @@ export async function moveProject(id: string, x: number, y: number): Promise<voi
   await db.projects.update(id, { x, y, z: Date.now() })
 }
 
+// retro 不传表示"跳过复盘"：只归档，以前写过的复盘保持原样
 export async function archiveProject(id: string, retro?: Retro): Promise<void> {
-  await db.projects.update(id, { status: 'archived', archivedAt: Date.now(), retro })
+  await db.projects.update(id, { status: 'archived', archivedAt: Date.now() })
+  if (retro) await saveRetro(id, retro)
 }
 
 export async function saveRetro(id: string, retro: Retro): Promise<void> {
