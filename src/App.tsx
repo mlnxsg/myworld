@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react'
 import ArchiveView from './components/ArchiveView'
 import Board from './components/Board'
 import DataButtons from './components/DataButtons'
+import NotesView from './components/NotesView'
 import ProjectDetail from './components/ProjectDetail'
 import StatusBar from './components/StatusBar'
 import { autoBackup } from './db'
 
-type View = 'board' | 'archive'
+type View = 'board' | 'archive' | 'notes'
 
 // 每隔多久自动备份一次
 const BACKUP_EVERY = 10 * 60 * 1000 // 10 分钟
 
 export default function App() {
-  // 当前显示白板还是归档区
+  // 当前显示白板、归档区还是碎碎念区
   const [view, setView] = useState<View>('board')
   // 当前在右侧面板里打开的项目；null 表示没有打开
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
@@ -36,6 +37,9 @@ export default function App() {
           <NavButton active={view === 'archive'} onClick={() => setView('archive')}>
             归档区
           </NavButton>
+          <NavButton active={view === 'notes'} onClick={() => setView('notes')}>
+            碎碎念
+          </NavButton>
         </nav>
 
         <div className="ml-auto">
@@ -44,11 +48,9 @@ export default function App() {
       </header>
 
       <main className="min-h-0 flex-1">
-        {view === 'board' ? (
-          <Board onOpenProject={setOpenProjectId} />
-        ) : (
-          <ArchiveView onOpenProject={setOpenProjectId} />
-        )}
+        {view === 'board' && <Board onOpenProject={setOpenProjectId} />}
+        {view === 'archive' && <ArchiveView onOpenProject={setOpenProjectId} />}
+        {view === 'notes' && <NotesView onOpenProject={setOpenProjectId} />}
       </main>
 
       <StatusBar />

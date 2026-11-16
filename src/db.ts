@@ -47,6 +47,11 @@ export function useProjects(status: Project['status']): Project[] {
   return useLiveQuery(() => db.projects.where('status').equals(status).toArray(), [status]) ?? []
 }
 
+// 所有项目，不管是进行中还是已归档
+export function useAllProjects(): Project[] {
+  return useLiveQuery(() => db.projects.toArray()) ?? []
+}
+
 export function useProject(id: string): Project | undefined {
   return useLiveQuery(() => db.projects.get(id), [id])
 }
@@ -73,6 +78,16 @@ export function useNotes(projectId: string): Note[] {
       },
       [projectId],
     ) ?? []
+  )
+}
+
+// 所有项目的碎碎念汇总，同样是最新的在最上面（碎碎念区用）
+export function useAllNotes(): Note[] {
+  return (
+    useLiveQuery(async () => {
+      const notes = await db.notes.toArray()
+      return notes.sort((a, b) => b.createdAt - a.createdAt)
+    }) ?? []
   )
 }
 
