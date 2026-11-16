@@ -128,3 +128,40 @@
     @apply font-sans;
     }
 }
+/* ---------- 以下是"我的世界"自己的样式（上面是 shadcn 自动生成的） ---------- */
+
+@theme inline {
+    /* 标题用衬线字体，正文用无衬线，学 PRISM 的搭配 */
+    --font-heading: Georgia, 'Songti SC', 'Noto Serif SC', SimSun, serif;
+    --color-ink: #1e293b;   /* 深蓝灰：主要文字 */
+    --color-gold: #c4975a;  /* 暖金色：强调色 */
+    --color-paper: #fdfdfb; /* 白板底色 */
+    --color-folder: #faf5ea;        /* 文件夹 */
+    --color-folder-edge: #e8d9bf;   /* 文件夹边线 */
+}
+
+/* 白板上的点阵 */
+.board-dots {
+    background-image: radial-gradient(circle, rgb(30 41 59 / 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+/* 进度条走完时：向外扩散一圈金色光晕，只播放一次 */
+@keyframes bar-done {
+    from { box-shadow: 0 0 0 0 rgb(196 151 90 / 0.55); }
+    to   { box-shadow: 0 0 0 10px rgb(196 151 90 / 0); }
+}
+.bar-done {
+    animation: bar-done 0.9s ease-out 1;
+}
+
+/* 走完时冒出来的小星星 */
+@keyframes star-pop {
+    0%   { transform: scale(0) rotate(-40deg); opacity: 0; }
+    60%  { transform: scale(1.4) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.star-pop {
+    display: inline-block;
+    animation: star-pop 0.5s ease-out 1;
+}
