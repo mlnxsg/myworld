@@ -199,4 +199,23 @@ export async function importAll(backup: BackupFile): Promise<void> {
     await db.tasks.bulkAdd(backup.tasks)
     await db.notes.bulkAdd(backup.notes)
   })
+  // 刚导入完，现在的数据和手里那份备份文件一模一样，所以也算"刚备份过"
+  markBackedUp()
+}
+
+// ---------- 备份提醒 ----------
+// "上次备份的时间"不属于项目数据，只是这个浏览器自己的一个小记录，
+// 所以放在 localStorage 里（一个简单的"名字 → 文字"小仓库），不进 IndexedDB，也不会被导出。
+
+const LAST_BACKUP_KEY = 'myworld:lastBackupAt'
+
+// 返回上次备份的时间戳；从没备份过则返回 null
+export function getLastBackupAt(): number | null {
+  const saved = localStorage.getItem(LAST_BACKUP_KEY)
+  return saved ? Number(saved) : null
+}
+
+// 记下"现在刚备份过"。导出文件后调用。
+export function markBackedUp(): void {
+  localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
 }

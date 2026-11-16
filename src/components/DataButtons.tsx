@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { exportAll, importAll, parseBackup } from '@/db'
+import { exportAll, importAll, markBackedUp, parseBackup } from '@/db'
 import { formatDate } from '@/lib/format'
 import type { BackupFile } from '@/types'
 
@@ -35,6 +35,7 @@ export default function DataButtons() {
     link.click()
 
     URL.revokeObjectURL(url)
+    markBackedUp() // 状态栏的"上次备份"会跟着更新
   }
 
   // 选好文件后：读内容、检查格式，没问题就等用户确认
