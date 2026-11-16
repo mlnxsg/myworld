@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import ArchiveView from './components/ArchiveView'
 import Board from './components/Board'
+import DataButtons from './components/DataButtons'
 import ProjectDetail from './components/ProjectDetail'
+import StatusBar from './components/StatusBar'
 
 type View = 'board' | 'archive'
 
@@ -24,6 +26,10 @@ export default function App() {
             归档区
           </NavButton>
         </nav>
+
+        <div className="ml-auto">
+          <DataButtons />
+        </div>
       </header>
 
       <main className="min-h-0 flex-1">
@@ -33,6 +39,8 @@ export default function App() {
           <ArchiveView onOpenProject={setOpenProjectId} />
         )}
       </main>
+
+      <StatusBar />
 
       <ProjectDetail projectId={openProjectId} onClose={() => setOpenProjectId(null)} />
     </div>
