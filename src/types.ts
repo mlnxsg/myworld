@@ -41,7 +41,7 @@ export interface Task {
 // 碎碎念
 export interface Note {
   id: string
-  projectId: string | null // null 为以后不属于任何项目的想法预留
+  projectId: string | null // null 表示"随手记"：不属于任何项目的想法
   content: string
   createdAt: number
 }

@@ -186,7 +186,8 @@ export async function deleteTask(id: string): Promise<void> {
 
 // ---------- 碎碎念 ----------
 
-export async function addNote(projectId: string, content: string): Promise<void> {
+// projectId 传 null 表示"随手记"：不属于任何项目的碎碎念
+export async function addNote(projectId: string | null, content: string): Promise<void> {
   await db.notes.add({ id: newId(), projectId, content, createdAt: Date.now() })
 }
 

@@ -1,7 +1,13 @@
-// 碎碎念区：把所有项目里的碎碎念汇总在一起，按时间倒序，按天分组。
-// 这里只看不改；点项目名可以打开那个项目的详情。
+// 碎碎念区：把所有碎碎念汇总在一起，按时间倒序，按天分组。
+// - 顶部可以直接记一条"随手记"：不属于任何项目的想法。
+// - 项目里的碎碎念在这里只看不改，点项目名可以打开那个项目的详情。
+// - 随手记没有别的地方可以管理，所以在这里可以删除。
 
-import { useAllNotes, useAllProjects } from '@/db'
+import { X } from 'lucide-react'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { addNote, deleteNote, useAllNotes, useAllProjects } from '@/db'
 import { formatDate, formatTime } from '@/lib/format'
 import type { Note } from '@/types'
 
@@ -31,9 +37,11 @@ export default function NotesView({ onOpenProject }: Props) {
       <div className="mx-auto grid max-w-2xl gap-6 px-5 py-8">
         <h2 className="font-heading text-2xl font-bold">碎碎念</h2>
 
+        <QuickNoteForm />
+
         {notes.length === 0 && (
-          <p className="font-heading text-ink/40 italic">
-            还没有碎碎念。打开任意一个项目就可以记。
+          <p className="font-heading text-ink/40">
+            还没有碎碎念。在上面随手记一条，或者打开某个项目去记。
           </p>
         )}
 
@@ -46,13 +54,13 @@ export default function NotesView({ onOpenProject }: Props) {
               {day.notes.map((note) => {
                 const project = projects.find((p) => p.id === note.projectId)
                 return (
-                  <li key={note.id} className="flex gap-3">
+                  <li key={note.id} className="group flex gap-3">
                     <time className="w-10 shrink-0 pt-0.5 text-xs text-ink/40 tabular-nums">
                       {formatTime(note.createdAt)}
                     </time>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                      {project && (
+                      {project ? (
                         <button
                           type="button"
                           onClick={() => onOpenProject(project.id)}
@@ -61,8 +69,22 @@ export default function NotesView({ onOpenProject }: Props) {
                           {project.name}
                           {project.status === 'archived' && '（已归档）'}
                         </button>
+                      ) : (
+                        <span className="mt-1 block text-xs text-ink/40">随手记</span>
                       )}
                     </div>
+                    {/* 只有随手记能在这里删除；项目里的碎碎念去项目详情里删 */}
+                    {note.projectId === null && (
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        className="opacity-30 transition-opacity group-hover:opacity-100"
+                        onClick={() => deleteNote(note.id)}
+                        aria-label="删除这条随手记"
+                      >
+                        <X />
+                      </Button>
+                    )}
                   </li>
                 )
               })}
@@ -71,5 +93,34 @@ export default function NotesView({ onOpenProject }: Props) {
         ))}
       </div>
     </div>
+  )
+}
+
+// 顶部的"随手记"输入框
+function QuickNoteForm() {
+  const [content, setContent] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (content.trim() === '') return
+    await addNote(null, content.trim()) // null = 不属于任何项目
+    setContent('')
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="grid gap-2">
+      <Textarea
+        rows={2}
+        placeholder="随手记：还不属于任何项目的想法…"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className="bg-white"
+      />
+      <div className="flex justify-end">
+        <Button type="submit" size="sm" disabled={content.trim() === ''}>
+          记下
+        </Button>
+      </div>
+    </form>
   )
 }

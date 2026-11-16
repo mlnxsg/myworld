@@ -27,7 +27,7 @@ export default function ArchiveView({ onOpenProject }: Props) {
         <h2 className="font-heading text-2xl font-bold">归档区</h2>
 
         {sorted.length === 0 && (
-          <p className="font-heading text-ink/40 italic">还没有归档的项目。</p>
+          <p className="font-heading text-ink/40">还没有归档的项目。</p>
         )}
 
         {sorted.map((project) => (
