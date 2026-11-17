@@ -51,7 +51,9 @@ export interface Achievement {
   id: string
   title: string
   content?: string // 文字，选填
-  image?: string // 图片，选填。存的是压缩后的 data URL（一长串以 data:image/jpeg 开头的文字）
+  // 图片。新记录必填；类型上仍写成可选，是因为早期可能存过没有图片的记录。
+  // 存的是压缩后的 data URL（一长串以 data:image/jpeg 开头的文字）
+  image?: string
   tags?: string[] // 标签，可以有多个；早期的记录没有这个字段，当作没有标签
   createdAt: number
 }

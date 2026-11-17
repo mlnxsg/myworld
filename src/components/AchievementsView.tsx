@@ -1,4 +1,4 @@
-// 成就区：记下自己比较满意的事，可以配一张图、加几个标签。
+// 成就区：记下自己比较满意的事，每条配一张图，可以加几个标签。
 // 顶部可以按标签筛选。
 
 import { ImagePlus, Pencil, Plus, SquarePen, X } from 'lucide-react'
@@ -234,7 +234,7 @@ function AchievementDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto text-ink sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg">{isNew ? '记一条成就' : '编辑成就'}</DialogTitle>
-          <DialogDescription>标题必填；文字、图片、标签都是选填。</DialogDescription>
+          <DialogDescription>标题和图片必填；文字、标签选填。</DialogDescription>
         </DialogHeader>
         {/* 表单单独做成组件：每次打开都会重新创建，里面的输入框就是这条成就当前的内容 */}
         {editing !== null && (
@@ -280,9 +280,12 @@ function AchievementForm({
     }
   }
 
+  // 标题和图片都有了才能保存
+  const canSubmit = title.trim() !== '' && image !== undefined
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (title.trim() === '') return
+    if (!canSubmit) return
 
     const input = { title: title.trim(), content: content.trim() || undefined, image, tags }
     if (achievement) {
@@ -318,7 +321,7 @@ function AchievementForm({
       </div>
 
       <div className="grid gap-1.5">
-        <Label>图片（选填）</Label>
+        <Label>图片</Label>
         {image ? (
           <div className="grid gap-2">
             <img src={image} alt="预览" className="max-h-56 w-full rounded-lg bg-ink/5 object-contain" />
@@ -329,9 +332,6 @@ function AchievementForm({
               </Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => fileInput.current?.click()}>
                 换一张
-              </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setImage(undefined)}>
-                去掉图片
               </Button>
             </div>
           </div>
@@ -365,7 +365,7 @@ function AchievementForm({
         <Button type="button" variant="ghost" onClick={onClose}>
           取消
         </Button>
-        <Button type="submit" disabled={title.trim() === ''}>
+        <Button type="submit" disabled={!canSubmit}>
           {achievement ? '保存' : '记下'}
         </Button>
       </DialogFooter>
