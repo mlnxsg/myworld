@@ -56,16 +56,14 @@ export default function HunchSection({
         <form onSubmit={handleSubmit} className="grid gap-2">
           <Textarea
             rows={2}
-            placeholder={
-              hasHunches ? '又有新的直觉？再记一条…' : '我觉得这件事会怎么发展？最大的坑在哪？'
-            }
+            placeholder={hasHunches ? '追加预判' : '预判'}
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-ink/40">写下后不能修改</span>
+            <span className="text-xs text-ink/40">写入后不可修改</span>
             <Button type="submit" size="sm" variant="outline" disabled={content.trim() === ''}>
-              写下
+              写入
             </Button>
           </div>
         </form>

@@ -41,7 +41,7 @@ export default function NotesView({ onOpenProject }: Props) {
 
         {notes.length === 0 && (
           <p className="font-heading text-ink/40">
-            还没有碎碎念。在上面随手记一条，或者打开某个项目去记。
+            暂无碎碎念
           </p>
         )}
 
@@ -111,14 +111,14 @@ function QuickNoteForm() {
     <form onSubmit={handleSubmit} className="grid gap-2">
       <Textarea
         rows={2}
-        placeholder="随手记：还不属于任何项目的想法…"
+        placeholder="随手记"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="bg-white"
       />
       <div className="flex justify-end">
         <Button type="submit" size="sm" disabled={content.trim() === ''}>
-          记下
+          添加
         </Button>
       </div>
     </form>

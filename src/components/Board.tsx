@@ -47,7 +47,7 @@ export default function Board({ onOpenProject }: Props) {
       >
         {projects.length === 0 && (
           <p className="pointer-events-none absolute inset-x-0 top-1/3 text-center font-heading text-ink/40">
-            双击空白处，新建一个项目
+            双击新建项目
           </p>
         )}
 

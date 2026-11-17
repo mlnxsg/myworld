@@ -24,7 +24,7 @@ export default function StatusBar() {
   const daysSince = lastBackupAt === null ? null : Math.floor((now.getTime() - lastBackupAt) / ONE_DAY)
 
   let backupText: string
-  if (daysSince === null) backupText = '还没备份过'
+  if (daysSince === null) backupText = '尚未备份'
   else if (daysSince === 0) backupText = `上次备份：${formatTime(lastBackupAt!)}`
   else backupText = `上次备份：${daysSince} 天前`
 
@@ -38,7 +38,6 @@ export default function StatusBar() {
 
       <span className={`ml-auto ${needsBackup ? 'font-medium text-gold' : ''}`}>
         {backupText}
-        {needsBackup && '，点右上角"导出"存一份'}
       </span>
     </footer>
   )

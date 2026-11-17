@@ -35,7 +35,7 @@ export default function ReferenceList({ projectId, readOnly }: Props) {
       {!readOnly && <ReferenceForm projectId={projectId} pasteEnabled={editingId === null} />}
 
       {references.length === 0 ? (
-        <p className="py-2 text-sm text-ink/40">还没有 Ref。</p>
+        <p className="py-2 text-sm text-ink/40">暂无 Ref</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {references.map((reference) =>
@@ -192,7 +192,7 @@ function ReferenceForm({
         <Textarea
           rows={2}
           autoFocus={reference !== undefined}
-          placeholder="存一段文字、一个链接，或者配几张图…"
+          placeholder="文字或链接"
           value={text}
           onChange={(e) => setText(e.target.value)}
         />

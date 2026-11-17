@@ -67,7 +67,7 @@ export default function TagInput({ id, value, onChange, suggestions }: Props) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => add(draft)} // 输完没按回车就点别处，也算加上
-          placeholder={value.length === 0 ? '比如：美食，回车添加' : ''}
+          placeholder={value.length === 0 ? '回车添加' : ''}
           className="h-6 min-w-24 flex-1 border-0 px-1 shadow-none focus-visible:ring-0"
         />
       </div>

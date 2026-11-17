@@ -78,18 +78,14 @@ function RetroForm({
         <DialogTitle className="font-heading text-lg">
           {mode === 'archive' ? `归档「${project.name}」` : `复盘「${project.name}」`}
         </DialogTitle>
-        <DialogDescription>
-          {mode === 'archive'
-            ? '花一分钟回头看看。也可以先跳过，之后在归档区补写。'
-            : '随时可以回来修改。'}
-        </DialogDescription>
+        <DialogDescription className="sr-only">填写收获与下次改进</DialogDescription>
       </DialogHeader>
 
       {/* 把当初的直觉原样摆出来，对照实际结果 */}
       <HunchList hunches={project.hunches} />
 
       <div className="grid gap-1.5">
-        <Label htmlFor="retro-learned">这次学到了什么？</Label>
+        <Label htmlFor="retro-learned">收获</Label>
         <Textarea
           id="retro-learned"
           rows={3}
@@ -99,7 +95,7 @@ function RetroForm({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="retro-next">下次会怎么做？</Label>
+        <Label htmlFor="retro-next">下次改进</Label>
         <Textarea
           id="retro-next"
           rows={3}
@@ -112,9 +108,9 @@ function RetroForm({
         {mode === 'archive' ? (
           <>
             <Button type="button" variant="ghost" onClick={handleSkip}>
-              跳过，直接归档
+              跳过
             </Button>
-            <Button type="submit">保存并归档</Button>
+            <Button type="submit">归档</Button>
           </>
         ) : (
           <>

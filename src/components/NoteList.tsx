@@ -32,20 +32,20 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
         <form onSubmit={handleSubmit} className="grid gap-2">
           <Textarea
             rows={2}
-            placeholder="想到什么就记下来…"
+            placeholder="记录想法"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
           <div className="flex justify-end">
             <Button type="submit" size="sm" disabled={content.trim() === ''}>
-              记下
+              添加
             </Button>
           </div>
         </form>
       )}
 
       {notes.length === 0 ? (
-        <p className="py-2 text-sm text-ink/40">还没有碎碎念。</p>
+        <p className="py-2 text-sm text-ink/40">暂无碎碎念</p>
       ) : (
         <ul className="mt-2">
           {notes.map((note) => (

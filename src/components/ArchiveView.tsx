@@ -27,7 +27,7 @@ export default function ArchiveView({ onOpenProject }: Props) {
         <h2 className="font-heading text-2xl font-bold">归档区</h2>
 
         {sorted.length === 0 && (
-          <p className="font-heading text-ink/40">还没有归档的项目。</p>
+          <p className="font-heading text-ink/40">暂无归档项目</p>
         )}
 
         {sorted.map((project) => (
@@ -77,11 +77,11 @@ function ArchivedCard({
 
       {hasRetro ? (
         <dl className="grid gap-2 text-sm">
-          <RetroAnswer question="这次学到了什么？" answer={project.retro?.learned} />
-          <RetroAnswer question="下次会怎么做？" answer={project.retro?.nextTime} />
+          <RetroAnswer question="收获" answer={project.retro?.learned} />
+          <RetroAnswer question="下次改进" answer={project.retro?.nextTime} />
         </dl>
       ) : (
-        <p className="text-sm text-ink/40">还没写复盘。</p>
+        <p className="text-sm text-ink/40">暂无复盘</p>
       )}
 
       <footer className="flex flex-wrap gap-1 border-t border-ink/5 pt-3">
@@ -89,10 +89,10 @@ function ArchivedCard({
           查看详情
         </Button>
         <Button size="sm" variant="ghost" onClick={onEditRetro}>
-          {hasRetro ? '修改复盘' : '补写复盘'}
+          {hasRetro ? '编辑复盘' : '添加复盘'}
         </Button>
         <Button size="sm" variant="ghost" onClick={() => restoreProject(project.id)}>
-          恢复到白板
+          恢复
         </Button>
       </footer>
     </article>
@@ -103,7 +103,7 @@ function RetroAnswer({ question, answer }: { question: string; answer?: string }
   return (
     <div>
       <dt className="text-xs text-ink/50">{question}</dt>
-      <dd className="whitespace-pre-wrap">{answer || <span className="text-ink/30">（没填）</span>}</dd>
+      <dd className="whitespace-pre-wrap">{answer || <span className="text-ink/30">—</span>}</dd>
     </div>
   )
 }

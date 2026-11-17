@@ -35,10 +35,10 @@ const TOOLS: { id: Tool; label: string; icon: React.ReactNode; hint: string }[] 
     id: 'crop',
     label: '裁切',
     icon: <Crop />,
-    hint: '拖动四条边或四个角调整要保留的范围，拖框中间可以移动。点"完成"或换工具时自动裁切。',
+    hint: '拖动边角调整裁切范围',
   },
-  { id: 'pen', label: '画笔', icon: <Pencil />, hint: '在图上按住拖动来画。' },
-  { id: 'text', label: '文字', icon: <Type />, hint: '在图上点一下放文字，输入后按回车。' },
+  { id: 'pen', label: '画笔', icon: <Pencil />, hint: '按住拖动绘制' },
+  { id: 'text', label: '文字', icon: <Type />, hint: '点击放置文字' },
 ]
 
 const COLORS = [
@@ -333,7 +333,7 @@ function EditorBody({
     >
       <DialogHeader>
         <DialogTitle className="font-heading text-lg">编辑图片</DialogTitle>
-        <DialogDescription>{currentTool.hint}</DialogDescription>
+        <DialogDescription className="sr-only">{currentTool.hint}</DialogDescription>
       </DialogHeader>
 
       {/* 工具栏 */}
@@ -356,7 +356,7 @@ function EditorBody({
         {tool === 'crop' ? (
           <Button type="button" size="sm" variant="ghost" disabled={!cropChanged} onClick={resetCrop}>
             <RotateCcw />
-            复原范围
+            重置
           </Button>
         ) : (
           <>
@@ -470,7 +470,7 @@ function EditorBody({
                   commitText()
                 }
               }}
-              placeholder="输入文字，回车确定"
+              placeholder="输入文字"
               aria-label="要放在图上的文字"
               className="absolute z-10 w-44 rounded border border-gold bg-white/90 px-1.5 py-0.5 text-sm text-ink outline-none"
               style={{

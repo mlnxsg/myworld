@@ -122,7 +122,6 @@ function LightboxBody({
         </DialogTitle>
         <DialogDescription className="sr-only">查看大图，可以放大缩小和左右切换</DialogDescription>
 
-        <span className="hidden text-xs text-white/40 md:inline">滚轮缩放 · 双击放大 · 放大后拖动</span>
         {hasMany && (
           <span className="text-sm text-white/70 tabular-nums">
             {index + 1} / {images.length}

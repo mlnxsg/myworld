@@ -24,7 +24,7 @@ export default function TaskList({ projectId, tasks, readOnly }: Props) {
       {!readOnly && <AddTaskForm projectId={projectId} />}
 
       {tasks.length === 0 ? (
-        <p className="py-2 text-sm text-ink/40">还没有事项。</p>
+        <p className="py-2 text-sm text-ink/40">暂无待办</p>
       ) : (
         <ul className="mt-2">
           {tasks.map((task) => (
@@ -82,7 +82,7 @@ function AddTaskForm({ projectId }: { projectId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-2">
-      <Input placeholder="要做什么？" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Input placeholder="新待办" value={title} onChange={(e) => setTitle(e.target.value)} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-ink/50">
           工作量

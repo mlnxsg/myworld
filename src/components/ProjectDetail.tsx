@@ -145,7 +145,7 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
                 min={1}
                 step={1}
                 defaultValue={project.estimatedTotal ?? ''}
-                placeholder="添加预估"
+                placeholder="未设置"
                 onBlur={handleEstimateBlur}
                 onKeyDown={blurOnEnter}
                 className="w-20 rounded bg-transparent px-1 py-0.5 font-bold tabular-nums outline-none placeholder:font-normal placeholder:text-ink/40 hover:bg-ink/5 focus:bg-ink/5"
@@ -154,7 +154,7 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
           )}
 
           {progress.overBy > 0 && (
-            <span className="text-gold">比预估多了 {progress.overBy} 分</span>
+            <span className="text-gold">超出预估 {progress.overBy} 分</span>
           )}
         </div>
       </header>
@@ -192,7 +192,7 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
           <AlertDialogHeader>
             <AlertDialogTitle>删除「{project.name}」？</AlertDialogTitle>
             <AlertDialogDescription>
-              项目里的待办事项和碎碎念会一起删除，而且无法恢复。如果只是做完了，可以改用归档。
+              待办、Ref 和碎碎念将一并删除，且无法恢复。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

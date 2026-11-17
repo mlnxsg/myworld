@@ -48,7 +48,7 @@ export default function DataButtons() {
     if (backup) {
       setPending(backup)
     } else {
-      setError('这个文件不是"我的世界"导出的备份，没有导入任何内容。')
+      setError('文件格式不符，未导入任何内容。')
     }
   }
 
@@ -78,17 +78,17 @@ export default function DataButtons() {
       <AlertDialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>导入会覆盖现有的全部数据</AlertDialogTitle>
+            <AlertDialogTitle>覆盖现有数据？</AlertDialogTitle>
             <AlertDialogDescription>
               {pending &&
-                `这份备份导出于 ${formatDate(pending.exportedAt)}，包含 ${pending.projects.length} 个项目、${pending.tasks.length} 条待办、${pending.notes.length} 条碎碎念、${pending.achievements.length} 条成就、${pending.references.length} 条 Ref。`}
-              现在的全部内容会被替换，无法撤销。
+                `备份于 ${formatDate(pending.exportedAt)}：项目 ${pending.projects.length} · 待办 ${pending.tasks.length} · 碎碎念 ${pending.notes.length} · 成就 ${pending.achievements.length} · Ref ${pending.references.length}。`}
+              现有内容将被全部替换，且无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleConfirmImport}>
-              覆盖并导入
+              导入
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -102,7 +102,7 @@ export default function DataButtons() {
             <AlertDialogDescription>{error}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>知道了</AlertDialogAction>
+            <AlertDialogAction>确定</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

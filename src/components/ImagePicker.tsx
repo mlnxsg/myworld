@@ -54,7 +54,7 @@ export default function ImagePicker({
     const room = max - images.length // 还能放几张
     const messages: string[] = []
     if (files.length > room) {
-      messages.push(`最多 ${max} 张，多出的 ${files.length - room} 张没有加进来。`)
+      messages.push(`最多 ${max} 张，已忽略 ${files.length - room} 张。`)
     }
 
     updateBusy(true)
@@ -69,7 +69,7 @@ export default function ImagePicker({
     }
     updateBusy(false)
 
-    if (failed > 0) messages.push(`有 ${failed} 张图片打不开，没有加进来。`)
+    if (failed > 0) messages.push(`${failed} 张图片无法读取。`)
     setImages((current) => [...current, ...added])
     setError(messages.join(''))
   }
@@ -108,12 +108,12 @@ export default function ImagePicker({
         if (imageType) blobs.push(await item.getType(imageType))
       }
       if (blobs.length === 0) {
-        setError('剪贴板里没有图片。先截图或复制一张图片再试。')
+        setError('剪贴板中没有图片。')
         return
       }
       addImageFiles(blobs)
     } catch {
-      setError('浏览器没有允许读取剪贴板。可以直接按 Ctrl+V 粘贴。')
+      setError('无法读取剪贴板，请使用 Ctrl+V。')
     }
   }
 
@@ -187,7 +187,7 @@ export default function ImagePicker({
       onClick={() => fileInput.current?.click()}
       disabled={busy}
       aria-label="添加图片"
-      title="添加图片（也可以 Ctrl+V 粘贴）"
+      title="添加图片"
       className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 text-xs text-ink/50 hover:border-gold hover:text-gold disabled:opacity-50 ${className}`}
     >
       {content}
@@ -253,11 +253,11 @@ export default function ImagePicker({
                 variant="outline"
                 onClick={pasteFromClipboard}
                 disabled={busy}
+                title="粘贴图片（Ctrl+V）"
               >
                 <ClipboardPaste />
-                从剪贴板粘贴
+                粘贴
               </Button>
-              <span>或者直接按 Ctrl+V 粘贴截图、复制的图片</span>
             </>
           )}
           {actions && <div className="ml-auto flex gap-1">{actions}</div>}

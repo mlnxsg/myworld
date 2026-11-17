@@ -75,7 +75,7 @@ export default function AchievementsView() {
           <h2 className="font-heading text-2xl font-bold">成就</h2>
           <Button size="sm" onClick={() => setEditing('new')}>
             <Plus />
-            记一条
+            新增
           </Button>
         </div>
 
@@ -93,11 +93,7 @@ export default function AchievementsView() {
           </div>
         )}
 
-        {achievements.length === 0 && (
-          <p className="font-heading text-ink/40">
-            还没有记录。做得不错的菜、解决的难题、坚持下来的事，都值得记一笔。
-          </p>
-        )}
+        {achievements.length === 0 && <p className="font-heading text-ink/40">暂无记录</p>}
 
         {/* columns-*：像报纸一样分栏，高矮不一的卡片会自然错落排开 */}
         <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
@@ -127,7 +123,7 @@ export default function AchievementsView() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>删除「{deleting?.title}」？</AlertDialogTitle>
-            <AlertDialogDescription>这条成就和它的图片会一起删除，无法恢复。</AlertDialogDescription>
+            <AlertDialogDescription>图片将一并删除，且无法恢复。</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
@@ -215,7 +211,9 @@ function AchievementCard({
         )}
 
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <time className="text-xs text-ink/40 tabular-nums">{formatDate(achievement.createdAt)}</time>
+          <time className="text-xs text-ink/40 tabular-nums">
+            {formatDate(achievement.createdAt)}
+          </time>
           {tags.map((tag) => (
             <button
               key={tag}
@@ -233,10 +231,20 @@ function AchievementCard({
 
       {/* 编辑和删除按钮平时看不见，鼠标移到卡片上才出现 */}
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-        <Button size="icon-xs" variant="secondary" onClick={onEdit} aria-label={`编辑成就：${achievement.title}`}>
+        <Button
+          size="icon-xs"
+          variant="secondary"
+          onClick={onEdit}
+          aria-label={`编辑成就：${achievement.title}`}
+        >
           <Pencil />
         </Button>
-        <Button size="icon-xs" variant="secondary" onClick={onDelete} aria-label={`删除成就：${achievement.title}`}>
+        <Button
+          size="icon-xs"
+          variant="secondary"
+          onClick={onDelete}
+          aria-label={`删除成就：${achievement.title}`}
+        >
           <X />
         </Button>
       </div>
@@ -259,8 +267,12 @@ function AchievementDialog({
     <Dialog open={editing !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto text-ink sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg">{isNew ? '记一条成就' : '编辑成就'}</DialogTitle>
-          <DialogDescription>标题和至少一张图片必填；文字、标签选填。</DialogDescription>
+          <DialogTitle className="font-heading text-lg">
+            {isNew ? '新成就' : '编辑成就'}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            填写成就的标题、图片、描述和标签
+          </DialogDescription>
         </DialogHeader>
         {/* 表单单独做成组件：每次打开都会重新创建，里面的输入框就是这条成就当前的内容 */}
         {editing !== null && (
@@ -313,18 +325,16 @@ function AchievementForm({
         <Input
           id="achievement-title"
           autoFocus
-          placeholder="比如：第一次做成功的红烧肉"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="achievement-content">文字（选填）</Label>
+        <Label htmlFor="achievement-content">描述</Label>
         <Textarea
           id="achievement-content"
           rows={3}
-          placeholder="怎么做到的？哪里让我满意？"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
@@ -334,7 +344,7 @@ function AchievementForm({
         <Label>
           图片
           <span className="font-normal text-ink/40 tabular-nums">
-            {images.length} / {MAX_IMAGES}，第一张是封面
+            {images.length} / {MAX_IMAGES}
           </span>
         </Label>
 
@@ -348,7 +358,7 @@ function AchievementForm({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="achievement-tags">标签（选填）</Label>
+        <Label htmlFor="achievement-tags">标签</Label>
         <TagInput id="achievement-tags" value={tags} onChange={setTags} suggestions={allTags} />
       </div>
 
@@ -357,7 +367,7 @@ function AchievementForm({
           取消
         </Button>
         <Button type="submit" disabled={!canSubmit}>
-          {achievement ? '保存' : '记下'}
+          保存
         </Button>
       </DialogFooter>
     </form>
