@@ -99,6 +99,21 @@ test('成就：新增后能导出，导入后原样回来，删除后消失', as
   expect((await exportAll()).achievements).toHaveLength(1)
 })
 
+test('成就：编辑时可以改标题、去掉图片、换标签，记录时间不变', async () => {
+  const { addAchievement, updateAchievement, exportAll } = await import('./db')
+  await addAchievement({ title: '原标题', image: 'data:image/jpeg;base64,AAAA', tags: ['美食'] })
+  const before = (await exportAll()).achievements.find((a) => a.title === '原标题')!
+
+  await updateAchievement(before.id, { title: '新标题', content: '补了文字', tags: ['美食', '周末'] })
+
+  const after = (await exportAll()).achievements.find((a) => a.id === before.id)!
+  expect(after.title).toBe('新标题')
+  expect(after.content).toBe('补了文字')
+  expect(after.image).toBeUndefined()
+  expect(after.tags).toEqual(['美食', '周末'])
+  expect(after.createdAt).toBe(before.createdAt)
+})
+
 test('不是备份文件的内容会被拒绝', async () => {
   const { parseBackup } = await import('./db')
   expect(parseBackup('不是 JSON')).toBeNull()

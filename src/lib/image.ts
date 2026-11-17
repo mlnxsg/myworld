@@ -26,5 +26,10 @@ export async function compressImage(file: File): Promise<string> {
   context.drawImage(bitmap, 0, 0, width, height)
   bitmap.close()
 
+  return canvasToJpeg(canvas)
+}
+
+// 把画布上的内容导出成 JPEG 的 data URL。图片编辑器"完成"时也用它。
+export function canvasToJpeg(canvas: HTMLCanvasElement): string {
   return canvas.toDataURL('image/jpeg', QUALITY)
 }

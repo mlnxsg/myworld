@@ -213,17 +213,32 @@ export async function deleteNote(id: string): Promise<void> {
 
 // ---------- 成就 ----------
 
-export async function addAchievement(input: {
+// 新增和编辑成就时填写的内容
+export interface AchievementInput {
   title: string
   content?: string
   image?: string
-}): Promise<void> {
+  tags?: string[]
+}
+
+export async function addAchievement(input: AchievementInput): Promise<void> {
   await db.achievements.add({
     id: newId(),
     title: input.title,
     content: input.content,
     image: input.image,
+    tags: input.tags ?? [],
     createdAt: Date.now(),
+  })
+}
+
+// 编辑：用新内容替换。content 或 image 为 undefined 表示去掉它。记录的时间不变。
+export async function updateAchievement(id: string, input: AchievementInput): Promise<void> {
+  await db.achievements.update(id, {
+    title: input.title,
+    content: input.content,
+    image: input.image,
+    tags: input.tags ?? [],
   })
 }
 
