@@ -25,6 +25,7 @@ import { calcProgress } from '@/progress'
 import HunchSection from './HunchSection'
 import NoteList from './NoteList'
 import ProgressBar from './ProgressBar'
+import ReferenceList from './ReferenceList'
 import RetroDialog from './RetroDialog'
 import TaskList from './TaskList'
 
@@ -154,6 +155,7 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
 
       <HunchSection project={project} readOnly={readOnly} />
       <TaskList projectId={project.id} tasks={tasks} readOnly={readOnly} />
+      <ReferenceList projectId={project.id} readOnly={readOnly} />
       <NoteList projectId={project.id} notes={notes} readOnly={readOnly} />
 
       {!readOnly && (

@@ -58,16 +58,26 @@ export interface Achievement {
   createdAt: number
 }
 
+// 收藏：项目里存下来的参考资料，文字和图片至少有一样
+export interface Reference {
+  id: string
+  projectId: string
+  text?: string // 文字或链接
+  images: string[] // 压缩后的 data URL，可以没有
+  createdAt: number
+}
+
 // 导出 / 导入用的 JSON 文件格式
 export interface BackupFile {
   app: 'myworld'
   // 数据结构变了就加 1。
   // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements；
-  // 版本 4：成就的 image（一张）改成 images（多张）
-  version: 4
+  // 版本 4：成就的 image（一张）改成 images（多张）；版本 5：新增 references（收藏库）
+  version: 5
   exportedAt: number
   projects: Project[]
   tasks: Task[]
   notes: Note[]
   achievements: Achievement[]
+  references: Reference[]
 }

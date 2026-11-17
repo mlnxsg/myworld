@@ -8,20 +8,29 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 interface Props {
   images: string[] | null // 要看的图片；null 表示关闭
   title: string
+  startIndex?: number // 从第几张开始看（从 0 数），默认第一张
   onClose: () => void
 }
 
-export default function Lightbox({ images, title, onClose }: Props) {
+export default function Lightbox({ images, title, startIndex = 0, onClose }: Props) {
   return (
     <Dialog open={images !== null} onOpenChange={(open) => !open && onClose()}>
-      {/* 每次打开都从第一张开始：内容单独做成组件，关掉再开就是全新的 */}
-      {images && <LightboxBody images={images} title={title} />}
+      {/* 内容单独做成组件：每次打开都是全新的，从 startIndex 那张开始 */}
+      {images && <LightboxBody images={images} title={title} startIndex={startIndex} />}
     </Dialog>
   )
 }
 
-function LightboxBody({ images, title }: { images: string[]; title: string }) {
-  const [index, setIndex] = useState(0)
+function LightboxBody({
+  images,
+  title,
+  startIndex,
+}: {
+  images: string[]
+  title: string
+  startIndex: number
+}) {
+  const [index, setIndex] = useState(startIndex)
   const hasMany = images.length > 1
 
   // 首尾相接：最后一张再往后就回到第一张

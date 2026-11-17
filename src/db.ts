@@ -4,13 +4,24 @@
 
 import Dexie, { type EntityTable } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
-import type { Achievement, BackupFile, Hunch, Note, Project, Retro, Score, Task } from './types'
+import type {
+  Achievement,
+  BackupFile,
+  Hunch,
+  Note,
+  Project,
+  Reference,
+  Retro,
+  Score,
+  Task,
+} from './types'
 
 const db = new Dexie('myworld') as Dexie & {
   projects: EntityTable<Project, 'id'>
   tasks: EntityTable<Task, 'id'>
   notes: EntityTable<Note, 'id'>
   achievements: EntityTable<Achievement, 'id'>
+  references: EntityTable<Reference, 'id'>
 }
 
 // 这里只需要列出"用来查询"的字段（索引），其他字段会自动保存。
@@ -41,6 +52,11 @@ db.version(4).upgrade((tx) =>
     .toCollection()
     .modify((achievement) => upgradeAchievement(achievement)),
 )
+
+// 版本 5：新增一张"收藏"表，按 projectId 查某个项目的收藏
+db.version(5).stores({
+  references: 'id, projectId',
+})
 
 // 把旧格式的成就改成新格式：image（一张）→ images（列表）。已经是新格式的不受影响。
 // 数据库升级和导入旧备份文件时都会用到。
@@ -92,6 +108,19 @@ export function useTasks(projectId: string): Task[] {
 }
 
 // 碎碎念按时间倒序：最新的在最上面
+// 某个项目的收藏，最新的在最上面
+export function useReferences(projectId: string): Reference[] {
+  return (
+    useLiveQuery(
+      async () => {
+        const references = await db.references.where('projectId').equals(projectId).sortBy('createdAt')
+        return references.reverse()
+      },
+      [projectId],
+    ) ?? []
+  )
+}
+
 export function useNotes(projectId: string): Note[] {
   return (
     useLiveQuery(
@@ -182,14 +211,35 @@ export async function restoreProject(id: string): Promise<void> {
   await db.projects.update(id, { status: 'active', archivedAt: undefined })
 }
 
-// 删除项目时，把它的待办和碎碎念一起删掉。
-// transaction 保证三步要么全部成功，要么全部不做。
+// 删除项目时，把它的待办、碎碎念和收藏一起删掉。
+// transaction 保证这几步要么全部成功，要么全部不做。
 export async function deleteProject(id: string): Promise<void> {
-  await db.transaction('rw', db.projects, db.tasks, db.notes, async () => {
+  await db.transaction('rw', db.projects, db.tasks, db.notes, db.references, async () => {
     await db.tasks.where('projectId').equals(id).delete()
     await db.notes.where('projectId').equals(id).delete()
+    await db.references.where('projectId').equals(id).delete()
     await db.projects.delete(id)
   })
+}
+
+// ---------- 收藏库 ----------
+
+// 文字和图片至少要有一样（由界面保证）
+export async function addReference(
+  projectId: string,
+  input: { text?: string; images: string[] },
+): Promise<void> {
+  await db.references.add({
+    id: newId(),
+    projectId,
+    text: input.text,
+    images: input.images,
+    createdAt: Date.now(),
+  })
+}
+
+export async function deleteReference(id: string): Promise<void> {
+  await db.references.delete(id)
 }
 
 // ---------- 待办事项 ----------
@@ -268,12 +318,13 @@ export async function deleteAchievement(id: string): Promise<void> {
 export async function exportAll(): Promise<BackupFile> {
   return {
     app: 'myworld',
-    version: 4,
+    version: 5,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
     notes: await db.notes.toArray(),
     achievements: await db.achievements.toArray(),
+    references: await db.references.toArray(),
   }
 }
 
@@ -283,7 +334,7 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      [1, 2, 3, 4].includes(data.version) &&
+      [1, 2, 3, 4, 5].includes(data.version) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes)
@@ -293,7 +344,8 @@ export function parseBackup(json: string): BackupFile | null {
     data.projects.forEach(upgradeProject)
     if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
     data.achievements.forEach(upgradeAchievement)
-    data.version = 4
+    if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有收藏库
+    data.version = 5
     return data as BackupFile
   } catch {
     return null
@@ -302,15 +354,14 @@ export function parseBackup(json: string): BackupFile | null {
 
 // 导入会覆盖现有的全部数据
 export async function importAll(backup: BackupFile): Promise<void> {
-  await db.transaction('rw', db.projects, db.tasks, db.notes, db.achievements, async () => {
-    await db.projects.clear()
-    await db.tasks.clear()
-    await db.notes.clear()
-    await db.achievements.clear()
+  const tables = [db.projects, db.tasks, db.notes, db.achievements, db.references]
+  await db.transaction('rw', tables, async () => {
+    for (const table of tables) await table.clear()
     await db.projects.bulkAdd(backup.projects)
     await db.tasks.bulkAdd(backup.tasks)
     await db.notes.bulkAdd(backup.notes)
     await db.achievements.bulkAdd(backup.achievements)
+    await db.references.bulkAdd(backup.references)
   })
   // 刚导入完，现在的数据和手里那份备份文件一模一样，所以也算"刚备份过"
   markBackedUp()
