@@ -1,8 +1,8 @@
 // 成就区：记下自己比较满意的事，每条配一张或几张图，可以加几个标签。
 // 顶部可以按标签筛选。
 
-import { ImagePlus, Images, Pencil, Plus, SquarePen, Star, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { ClipboardPaste, ImagePlus, Images, Pencil, Plus, SquarePen, Star, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -295,11 +295,9 @@ function AchievementForm({
   // 藏起来的"选择文件"输入框
   const fileInput = useRef<HTMLInputElement>(null)
 
-  // 选好图片后（可以一次选多张）：逐张压缩，加到最后面
-  async function handleImagesChosen(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = [...(e.target.files ?? [])]
-    e.target.value = '' // 清掉，这样下次选同样的图也会触发
-    if (files.length === 0) return
+  // 加图片：逐张压缩，加到最后面。从文件夹选、Ctrl+V、"从剪贴板粘贴"按钮都走这里。
+  async function addImageFiles(files: Blob[]) {
+    if (files.length === 0 || loadingImages) return
 
     const room = MAX_IMAGES - images.length // 还能放几张
     const messages: string[] = []
@@ -322,6 +320,48 @@ function AchievementForm({
     if (failed > 0) messages.push(`有 ${failed} 张图片打不开，没有加进来。`)
     setImages((current) => [...current, ...added])
     setError(messages.join(''))
+  }
+
+  // 从文件夹选好图片后（可以一次选多张）
+  function handleImagesChosen(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = [...(e.target.files ?? [])]
+    e.target.value = '' // 清掉，这样下次选同样的图也会触发
+    addImageFiles(files)
+  }
+
+  // Ctrl+V：编辑框开着时，在哪里按都行。
+  // 剪贴板里是图片才接手；是文字就照常粘贴到输入框里，不受影响。
+  // 监听整个页面的"粘贴"属于和浏览器打交道，所以放在 effect 里，组件消失时要取消监听。
+  // 不写依赖列表：每次渲染后都重新挂一次，这样处理函数里用到的 images 等总是最新的。
+  useEffect(() => {
+    function handlePaste(e: ClipboardEvent) {
+      if (editingIndex !== null) return // 正在裁切/标记某张图时不加新图
+      const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'))
+      if (files.length === 0) return
+      e.preventDefault()
+      addImageFiles(files)
+    }
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  })
+
+  // "从剪贴板粘贴"按钮：主动去读剪贴板。第一次用时浏览器可能会问要不要允许。
+  async function pasteFromClipboard() {
+    try {
+      const items = await navigator.clipboard.read()
+      const blobs: Blob[] = []
+      for (const item of items) {
+        const imageType = item.types.find((type) => type.startsWith('image/'))
+        if (imageType) blobs.push(await item.getType(imageType))
+      }
+      if (blobs.length === 0) {
+        setError('剪贴板里没有图片。先截图或复制一张图片再试。')
+        return
+      }
+      addImageFiles(blobs)
+    } catch {
+      setError('浏览器没有允许读取剪贴板。可以直接按 Ctrl+V 粘贴。')
+    }
   }
 
   function removeImage(index: number) {
@@ -453,6 +493,21 @@ function AchievementForm({
           className="hidden"
           onChange={handleImagesChosen}
         />
+        {images.length < MAX_IMAGES && (
+          <div className="flex flex-wrap items-center gap-x-2 text-xs text-ink/50">
+            <Button
+              type="button"
+              size="xs"
+              variant="outline"
+              onClick={pasteFromClipboard}
+              disabled={loadingImages}
+            >
+              <ClipboardPaste />
+              从剪贴板粘贴
+            </Button>
+            <span>或者直接按 Ctrl+V 粘贴截图、复制的图片</span>
+          </div>
+        )}
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
 
