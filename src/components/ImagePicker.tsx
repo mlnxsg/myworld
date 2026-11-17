@@ -1,6 +1,10 @@
-// 选图片的小方块网格：从文件夹选（可多选）、Ctrl+V 粘贴、"从剪贴板粘贴"按钮；
-// 每张图可以裁切/标记、删除，需要时还能设为封面。
-// 成就和 Ref库都用它。图片都会先压缩再放进来。
+// 选图片：从文件夹选（可多选）、Ctrl+V 粘贴、"从剪贴板粘贴"按钮；
+// 每张图可以裁切/标记、删除，需要时还能设为封面。图片都会先压缩再放进来。
+//
+// 两种样子：
+// - 普通（成就用）：图片排成三列大方块，最后一格是"添加图片"
+// - 紧凑（Ref库用）：左边一个小小的"添加"方块，右边放外面传进来的内容（比如输入框），
+//   已加的图片在下面排成一行小缩略图
 
 import { ClipboardPaste, ImagePlus, SquarePen, Star, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -14,7 +18,8 @@ interface Props {
   setImages: React.Dispatch<React.SetStateAction<string[]>>
   max: number // 最多几张
   showCover?: boolean // 第一张标成"封面"，其他张可以"设为封面"
-  columns?: 3 | 4
+  compact?: boolean // 用紧凑的样子
+  children?: React.ReactNode // 紧凑时放在"添加"方块右边的内容
   onBusyChange?: (busy: boolean) => void // 正在压缩图片时告诉外面，外面可以先别让保存
   // 要不要接收 Ctrl+V。页面上同时有两个选图网格时，只让一个接收，免得一张图被加两次
   pasteEnabled?: boolean
@@ -25,7 +30,8 @@ export default function ImagePicker({
   setImages,
   max,
   showCover = false,
-  columns = 3,
+  compact = false,
+  children,
   onBusyChange,
   pasteEnabled = true,
 }: Props) {
@@ -121,75 +127,109 @@ export default function ImagePicker({
 
   const hasRoom = images.length < max
 
+  // 一张已选图片的小方块，右下角有裁切/标记、设为封面、删除按钮。sizeClass 决定它多大
+  function renderThumb(image: string, index: number, sizeClass: string) {
+    return (
+      <div key={index} className={`relative overflow-hidden rounded-lg bg-ink/5 ${sizeClass}`}>
+        <img src={image} alt={`第 ${index + 1} 张`} className="size-full object-cover" />
+
+        {showCover && index === 0 && (
+          <span className="absolute top-1 left-1 rounded bg-gold px-1.5 text-[10px] text-white">
+            封面
+          </span>
+        )}
+
+        {/* 每张图上的小按钮：裁切/标记、设为封面、删除 */}
+        <div className="absolute inset-x-1 bottom-1 flex justify-end gap-1">
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="secondary"
+            onClick={() => setEditingIndex(index)}
+            aria-label={`裁切或标记第 ${index + 1} 张`}
+            title="裁切 / 标记"
+          >
+            <SquarePen />
+          </Button>
+          {showCover && index > 0 && (
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="secondary"
+              onClick={() => makeCover(index)}
+              aria-label={`把第 ${index + 1} 张设为封面`}
+              title="设为封面"
+            >
+              <Star />
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="secondary"
+            onClick={() => removeImage(index)}
+            aria-label={`删除第 ${index + 1} 张`}
+            title="删除这张"
+          >
+            <X />
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // "添加图片"按钮：点了打开选择文件
+  const addButton = (className: string, content: React.ReactNode) => (
+    <button
+      type="button"
+      onClick={() => fileInput.current?.click()}
+      disabled={busy}
+      aria-label="添加图片"
+      title="添加图片（也可以 Ctrl+V 粘贴）"
+      className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 text-xs text-ink/50 hover:border-gold hover:text-gold disabled:opacity-50 ${className}`}
+    >
+      {content}
+    </button>
+  )
+
   return (
     <div className="grid gap-1.5">
-      {/* 已选的图片排成小方块；最后一格是"添加" */}
-      {/* columns 是最少几列；放在够宽的面板里（外面有 @container）会自动多排几列 */}
-      <div
-        className={`grid gap-2 ${
-          columns === 4 ? 'grid-cols-4 @xl:grid-cols-6 @3xl:grid-cols-8' : 'grid-cols-3'
-        }`}
-      >
-        {images.map((image, index) => (
-          <div key={index} className="relative aspect-square overflow-hidden rounded-lg bg-ink/5">
-            <img src={image} alt={`第 ${index + 1} 张`} className="size-full object-cover" />
-
-            {showCover && index === 0 && (
-              <span className="absolute top-1 left-1 rounded bg-gold px-1.5 text-[10px] text-white">
-                封面
-              </span>
-            )}
-
-            {/* 每张图上的小按钮：裁切/标记、设为封面、删除 */}
-            <div className="absolute inset-x-1 bottom-1 flex justify-end gap-1">
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="secondary"
-                onClick={() => setEditingIndex(index)}
-                aria-label={`裁切或标记第 ${index + 1} 张`}
-                title="裁切 / 标记"
-              >
-                <SquarePen />
-              </Button>
-              {showCover && index > 0 && (
-                <Button
-                  type="button"
-                  size="icon-xs"
-                  variant="secondary"
-                  onClick={() => makeCover(index)}
-                  aria-label={`把第 ${index + 1} 张设为封面`}
-                  title="设为封面"
-                >
-                  <Star />
-                </Button>
+      {compact ? (
+        <>
+          {/* 紧凑：左边小方块 + 右边外面传进来的内容 */}
+          <div className="flex items-start gap-2">
+            {hasRoom &&
+              addButton(
+                'size-16 shrink-0', // 和输入框一样高（输入框最矮 64px，size-16 也是 64px）
+                busy ? (
+                  <span className="text-[10px]">处理中</span>
+                ) : (
+                  <ImagePlus className="size-5" />
+                ),
               )}
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="secondary"
-                onClick={() => removeImage(index)}
-                aria-label={`删除第 ${index + 1} 张`}
-                title="删除这张"
-              >
-                <X />
-              </Button>
-            </div>
+            <div className="min-w-0 flex-1">{children}</div>
           </div>
-        ))}
+          {images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {images.map((image, index) => renderThumb(image, index, 'size-20'))}
+            </div>
+          )}
+        </>
+      ) : (
+        /* 普通：图片排成三列方块，最后一格是"添加" */
+        <div className="grid grid-cols-3 gap-2">
+          {images.map((image, index) => renderThumb(image, index, 'aspect-square'))}
 
-        {hasRoom && (
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            disabled={busy}
-            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 text-xs text-ink/50 hover:border-gold hover:text-gold disabled:opacity-50"
-          >
-            <ImagePlus className="size-5" />
-            {busy ? '处理中…' : '添加图片'}
-          </button>
-        )}
-      </div>
+          {hasRoom &&
+            addButton(
+              'aspect-square',
+              <>
+                <ImagePlus className="size-5" />
+                {busy ? '处理中…' : '添加图片'}
+              </>,
+            )}
+        </div>
+      )}
 
       <input
         ref={fileInput}
@@ -202,7 +242,13 @@ export default function ImagePicker({
 
       {hasRoom && (
         <div className="flex flex-wrap items-center gap-x-2 text-xs text-ink/50">
-          <Button type="button" size="xs" variant="outline" onClick={pasteFromClipboard} disabled={busy}>
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
+            onClick={pasteFromClipboard}
+            disabled={busy}
+          >
             <ClipboardPaste />
             从剪贴板粘贴
           </Button>

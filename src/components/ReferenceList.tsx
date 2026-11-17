@@ -167,21 +167,23 @@ function ReferenceForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-2">
-      <Textarea
-        rows={2}
-        autoFocus={reference !== undefined}
-        placeholder="存一段文字、一个链接，或者配几张图…"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+      {/* 紧凑样子：左边小小的"添加图片"方块，右边是输入框 */}
       <ImagePicker
         images={images}
         setImages={setImages}
         max={MAX_IMAGES}
-        columns={4}
+        compact
         onBusyChange={setBusy}
         pasteEnabled={pasteEnabled}
-      />
+      >
+        <Textarea
+          rows={2}
+          autoFocus={reference !== undefined}
+          placeholder="存一段文字、一个链接，或者配几张图…"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </ImagePicker>
       <div className="flex justify-end gap-1">
         {reference && (
           <Button type="button" size="sm" variant="ghost" onClick={onDone}>
