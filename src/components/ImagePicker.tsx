@@ -16,6 +16,8 @@ interface Props {
   showCover?: boolean // 第一张标成"封面"，其他张可以"设为封面"
   columns?: 3 | 4
   onBusyChange?: (busy: boolean) => void // 正在压缩图片时告诉外面，外面可以先别让保存
+  // 要不要接收 Ctrl+V。页面上同时有两个选图网格时，只让一个接收，免得一张图被加两次
+  pasteEnabled?: boolean
 }
 
 export default function ImagePicker({
@@ -25,6 +27,7 @@ export default function ImagePicker({
   showCover = false,
   columns = 3,
   onBusyChange,
+  pasteEnabled = true,
 }: Props) {
   const [busy, setBusy] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null) // 正在裁切/标记第几张
@@ -75,6 +78,7 @@ export default function ImagePicker({
   // 监听整个页面的"粘贴"属于和浏览器打交道，所以放在 effect 里，组件消失时要取消监听。
   // 不写依赖列表：每次渲染后都重新挂一次，这样处理函数里用到的 images 等总是最新的。
   useEffect(() => {
+    if (!pasteEnabled) return
     function handlePaste(e: ClipboardEvent) {
       if (editingIndex !== null) return // 正在裁切/标记某张图时不加新图
       const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'))

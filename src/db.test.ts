@@ -176,3 +176,19 @@ test('收藏库：新增后能导出导入，删除项目时它的收藏一起�
   await deleteReference(left[0].id)
   expect((await exportAll()).references).toHaveLength(0)
 })
+
+test('收藏库：编辑时可以删掉一张图、改文字，记录时间不变', async () => {
+  const { createProject, addReference, updateReference, exportAll } = await import('./db')
+  await createProject({ name: '编辑收藏用的项目', x: 0, y: 0 })
+  const project = (await exportAll()).projects.find((p) => p.name === '编辑收藏用的项目')!
+  await addReference(project.id, { text: '原来的说明', images: ['图1', '图2', '图3'] })
+  const before = (await exportAll()).references.find((r) => r.projectId === project.id)!
+
+  await updateReference(before.id, { text: undefined, images: ['图1', '图3'] }) // 删掉第 2 张，去掉文字
+
+  const after = (await exportAll()).references.find((r) => r.id === before.id)!
+  expect(after.images).toEqual(['图1', '图3'])
+  expect(after.text).toBeUndefined()
+  expect(after.createdAt).toBe(before.createdAt)
+  expect(after.projectId).toBe(project.id)
+})

@@ -238,6 +238,14 @@ export async function addReference(
   })
 }
 
+// 编辑：用新的文字和图片替换。text 为 undefined 表示去掉文字。记录的时间不变。
+export async function updateReference(
+  id: string,
+  input: { text?: string; images: string[] },
+): Promise<void> {
+  await db.references.update(id, { text: input.text, images: input.images })
+}
+
 export async function deleteReference(id: string): Promise<void> {
   await db.references.delete(id)
 }
