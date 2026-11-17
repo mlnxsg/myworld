@@ -148,7 +148,7 @@ test('不是备份文件的内容会被拒绝', async () => {
   expect(parseBackup('{"app":"别的应用"}')).toBeNull()
 })
 
-test('Ref库：新增后能导出导入，删除项目时它的 Ref 一起删掉，别的项目不受影响', async () => {
+test('Ref 库：新增后能导出导入，删除项目时它的 Ref 一起删掉，别的项目不受影响', async () => {
   const { createProject, addReference, deleteReference, deleteProject, exportAll, importAll, parseBackup } =
     await import('./db')
   await createProject({ name: '要删的项目', x: 0, y: 0 })
@@ -177,7 +177,7 @@ test('Ref库：新增后能导出导入，删除项目时它的 Ref 一起删掉
   expect((await exportAll()).references).toHaveLength(0)
 })
 
-test('Ref库：编辑时可以删掉一张图、改文字，记录时间不变', async () => {
+test('Ref 库：编辑时可以删掉一张图、改文字，记录时间不变', async () => {
   const { createProject, addReference, updateReference, exportAll } = await import('./db')
   await createProject({ name: '编辑 Ref 用的项目', x: 0, y: 0 })
   const project = (await exportAll()).projects.find((p) => p.name === '编辑 Ref 用的项目')!

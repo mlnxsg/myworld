@@ -3,7 +3,7 @@
 //
 // 两种样子：
 // - 普通（成就用）：图片排成三列大方块，最后一格是"添加图片"
-// - 紧凑（Ref库用）：左边一个小小的"添加"方块，右边放外面传进来的内容（比如输入框），
+// - 紧凑（Ref 库用）：左边一个小小的"添加"方块，右边放外面传进来的内容（比如输入框），
 //   已加的图片在下面排成一行小缩略图
 
 import { ClipboardPaste, ImagePlus, SquarePen, Star, X } from 'lucide-react'
@@ -20,6 +20,7 @@ interface Props {
   showCover?: boolean // 第一张标成"封面"，其他张可以"设为封面"
   compact?: boolean // 用紧凑的样子
   children?: React.ReactNode // 紧凑时放在"添加"方块右边的内容
+  actions?: React.ReactNode // 放在"从剪贴板粘贴"那一行最右边的东西，比如保存按钮
   onBusyChange?: (busy: boolean) => void // 正在压缩图片时告诉外面，外面可以先别让保存
   // 要不要接收 Ctrl+V。页面上同时有两个选图网格时，只让一个接收，免得一张图被加两次
   pasteEnabled?: boolean
@@ -32,6 +33,7 @@ export default function ImagePicker({
   showCover = false,
   compact = false,
   children,
+  actions,
   onBusyChange,
   pasteEnabled = true,
 }: Props) {
@@ -240,19 +242,25 @@ export default function ImagePicker({
         onChange={handleImagesChosen}
       />
 
-      {hasRoom && (
-        <div className="flex flex-wrap items-center gap-x-2 text-xs text-ink/50">
-          <Button
-            type="button"
-            size="xs"
-            variant="outline"
-            onClick={pasteFromClipboard}
-            disabled={busy}
-          >
-            <ClipboardPaste />
-            从剪贴板粘贴
-          </Button>
-          <span>或者直接按 Ctrl+V 粘贴截图、复制的图片</span>
+      {/* 一行：左边是粘贴的入口，右边是外面传进来的按钮（比如"存入"） */}
+      {(hasRoom || actions) && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/50">
+          {hasRoom && (
+            <>
+              <Button
+                type="button"
+                size="xs"
+                variant="outline"
+                onClick={pasteFromClipboard}
+                disabled={busy}
+              >
+                <ClipboardPaste />
+                从剪贴板粘贴
+              </Button>
+              <span>或者直接按 Ctrl+V 粘贴截图、复制的图片</span>
+            </>
+          )}
+          {actions && <div className="ml-auto flex gap-1">{actions}</div>}
         </div>
       )}
       {error && <p className="text-xs text-destructive">{error}</p>}

@@ -222,7 +222,7 @@ export async function deleteProject(id: string): Promise<void> {
   })
 }
 
-// ---------- Ref库 ----------
+// ---------- Ref 库 ----------
 
 // 文字和图片至少要有一样（由界面保证）
 export async function addReference(
@@ -352,7 +352,7 @@ export function parseBackup(json: string): BackupFile | null {
     data.projects.forEach(upgradeProject)
     if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
     data.achievements.forEach(upgradeAchievement)
-    if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有 Ref库
+    if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有 Ref 库
     data.version = 5
     return data as BackupFile
   } catch {

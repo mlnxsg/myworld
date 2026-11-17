@@ -72,7 +72,7 @@ export interface BackupFile {
   app: 'myworld'
   // 数据结构变了就加 1。
   // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements；
-  // 版本 4：成就的 image（一张）改成 images（多张）；版本 5：新增 references（Ref库）
+  // 版本 4：成就的 image（一张）改成 images（多张）；版本 5：新增 references（Ref 库）
   version: 5
   exportedAt: number
   projects: Project[]

@@ -1,4 +1,4 @@
-// 项目详情里的"Ref库"：存这个项目的参考资料。
+// 项目详情里的"Ref 库"：存这个项目的参考资料。
 // 一条 Ref 可以只有文字、只有图片，或者几张图加一段说明。文字里的网址可以直接点开。
 // 每条都可以编辑：在卡片原地改文字、删图、加图、裁切或标记。
 
@@ -29,7 +29,7 @@ export default function ReferenceList({ projectId, readOnly }: Props) {
 
   return (
     <section>
-      <h3 className="mb-2 font-heading text-base font-semibold">Ref库</h3>
+      <h3 className="mb-2 font-heading text-base font-semibold">Ref 库</h3>
 
       {/* 编辑某一条时，Ctrl+V 粘贴的图片进正在编辑的那条，不进上面的新增框 */}
       {!readOnly && <ReferenceForm projectId={projectId} pasteEnabled={editingId === null} />}
@@ -175,6 +175,19 @@ function ReferenceForm({
         compact
         onBusyChange={setBusy}
         pasteEnabled={pasteEnabled}
+        // 按钮放在"从剪贴板粘贴"那一行的右边，省一行
+        actions={
+          <>
+            {reference && (
+              <Button type="button" size="sm" variant="ghost" onClick={onDone}>
+                取消
+              </Button>
+            )}
+            <Button type="submit" size="sm" disabled={!canSubmit}>
+              {reference ? '保存' : '存入'}
+            </Button>
+          </>
+        }
       >
         <Textarea
           rows={2}
@@ -184,16 +197,6 @@ function ReferenceForm({
           onChange={(e) => setText(e.target.value)}
         />
       </ImagePicker>
-      <div className="flex justify-end gap-1">
-        {reference && (
-          <Button type="button" size="sm" variant="ghost" onClick={onDone}>
-            取消
-          </Button>
-        )}
-        <Button type="submit" size="sm" disabled={!canSubmit}>
-          {reference ? '保存' : '存入'}
-        </Button>
-      </div>
     </form>
   )
 }
