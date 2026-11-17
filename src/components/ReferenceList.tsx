@@ -1,5 +1,5 @@
-// 项目详情里的"收藏库"：存这个项目的参考资料。
-// 一条收藏可以只有文字、只有图片，或者几张图加一段说明。文字里的网址可以直接点开。
+// 项目详情里的"Ref库"：存这个项目的参考资料。
+// 一条 Ref 可以只有文字、只有图片，或者几张图加一段说明。文字里的网址可以直接点开。
 // 每条都可以编辑：在卡片原地改文字、删图、加图、裁切或标记。
 
 import { Pencil, X } from 'lucide-react'
@@ -13,7 +13,7 @@ import ImagePicker from './ImagePicker'
 import Lightbox from './Lightbox'
 import LinkifiedText from './LinkifiedText'
 
-const MAX_IMAGES = 9 // 一条收藏最多几张图
+const MAX_IMAGES = 9 // 一条 Ref 最多几张图
 
 interface Props {
   projectId: string
@@ -29,13 +29,13 @@ export default function ReferenceList({ projectId, readOnly }: Props) {
 
   return (
     <section>
-      <h3 className="mb-2 font-heading text-base font-semibold">收藏库</h3>
+      <h3 className="mb-2 font-heading text-base font-semibold">Ref库</h3>
 
       {/* 编辑某一条时，Ctrl+V 粘贴的图片进正在编辑的那条，不进上面的新增框 */}
       {!readOnly && <ReferenceForm projectId={projectId} pasteEnabled={editingId === null} />}
 
       {references.length === 0 ? (
-        <p className="py-2 text-sm text-ink/40">还没有收藏。</p>
+        <p className="py-2 text-sm text-ink/40">还没有 Ref。</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {references.map((reference) =>
@@ -63,14 +63,14 @@ export default function ReferenceList({ projectId, readOnly }: Props) {
       <Lightbox
         images={viewing?.images ?? null}
         startIndex={viewing?.index}
-        title="收藏"
+        title="Ref"
         onClose={() => setViewing(null)}
       />
     </section>
   )
 }
 
-// 平时显示的一条收藏
+// 平时显示的一条 Ref
 function ReferenceCard({
   reference,
   readOnly,
@@ -112,14 +112,14 @@ function ReferenceCard({
         {!readOnly && (
           // 编辑和删除按钮平时是淡的，鼠标移到这条上才明显
           <div className="flex opacity-30 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-            <Button size="icon-xs" variant="ghost" onClick={onEdit} aria-label="编辑这条收藏">
+            <Button size="icon-xs" variant="ghost" onClick={onEdit} aria-label="编辑这条 Ref">
               <Pencil />
             </Button>
             <Button
               size="icon-xs"
               variant="ghost"
               onClick={() => deleteReference(reference.id)}
-              aria-label="删除这条收藏"
+              aria-label="删除这条 Ref"
             >
               <X />
             </Button>
@@ -189,7 +189,7 @@ function ReferenceForm({
           </Button>
         )}
         <Button type="submit" size="sm" disabled={!canSubmit}>
-          {reference ? '保存' : '收藏'}
+          {reference ? '保存' : '存入'}
         </Button>
       </div>
     </form>

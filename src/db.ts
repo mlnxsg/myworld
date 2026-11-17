@@ -53,7 +53,7 @@ db.version(4).upgrade((tx) =>
     .modify((achievement) => upgradeAchievement(achievement)),
 )
 
-// 版本 5：新增一张"收藏"表，按 projectId 查某个项目的收藏
+// 版本 5：新增一张"Ref"表，按 projectId 查某个项目的 Ref
 db.version(5).stores({
   references: 'id, projectId',
 })
@@ -108,7 +108,7 @@ export function useTasks(projectId: string): Task[] {
 }
 
 // 碎碎念按时间倒序：最新的在最上面
-// 某个项目的收藏，最新的在最上面
+// 某个项目的 Ref，最新的在最上面
 export function useReferences(projectId: string): Reference[] {
   return (
     useLiveQuery(
@@ -211,7 +211,7 @@ export async function restoreProject(id: string): Promise<void> {
   await db.projects.update(id, { status: 'active', archivedAt: undefined })
 }
 
-// 删除项目时，把它的待办、碎碎念和收藏一起删掉。
+// 删除项目时，把它的待办、碎碎念和 Ref 一起删掉。
 // transaction 保证这几步要么全部成功，要么全部不做。
 export async function deleteProject(id: string): Promise<void> {
   await db.transaction('rw', db.projects, db.tasks, db.notes, db.references, async () => {
@@ -222,7 +222,7 @@ export async function deleteProject(id: string): Promise<void> {
   })
 }
 
-// ---------- 收藏库 ----------
+// ---------- Ref库 ----------
 
 // 文字和图片至少要有一样（由界面保证）
 export async function addReference(
@@ -352,7 +352,7 @@ export function parseBackup(json: string): BackupFile | null {
     data.projects.forEach(upgradeProject)
     if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
     data.achievements.forEach(upgradeAchievement)
-    if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有收藏库
+    if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有 Ref库
     data.version = 5
     return data as BackupFile
   } catch {

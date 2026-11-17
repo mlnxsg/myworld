@@ -1,6 +1,6 @@
 // 选图片的小方块网格：从文件夹选（可多选）、Ctrl+V 粘贴、"从剪贴板粘贴"按钮；
 // 每张图可以裁切/标记、删除，需要时还能设为封面。
-// 成就和收藏库都用它。图片都会先压缩再放进来。
+// 成就和 Ref库都用它。图片都会先压缩再放进来。
 
 import { ClipboardPaste, ImagePlus, SquarePen, Star, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'

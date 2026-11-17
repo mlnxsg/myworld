@@ -78,7 +78,7 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
 
   const backup = parseBackup(oldFile)
   expect(backup?.version).toBe(5)
-  expect(backup?.references).toEqual([]) // 旧备份里没有收藏，补一个空列表
+  expect(backup?.references).toEqual([]) // 旧备份里没有 Ref，补一个空列表
   expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
   expect(backup?.projects[0].hunches).toEqual([oldHunch])
 })
@@ -148,7 +148,7 @@ test('不是备份文件的内容会被拒绝', async () => {
   expect(parseBackup('{"app":"别的应用"}')).toBeNull()
 })
 
-test('收藏库：新增后能导出导入，删除项目时它的收藏一起删掉，别的项目不受影响', async () => {
+test('Ref库：新增后能导出导入，删除项目时它的 Ref 一起删掉，别的项目不受影响', async () => {
   const { createProject, addReference, deleteReference, deleteProject, exportAll, importAll, parseBackup } =
     await import('./db')
   await createProject({ name: '要删的项目', x: 0, y: 0 })
@@ -159,15 +159,15 @@ test('收藏库：新增后能导出导入，删除项目时它的收藏一起�
 
   await addReference(doomed.id, { text: 'https://example.com 参考', images: [] })
   await addReference(doomed.id, { images: ['图1', '图2'] })
-  await addReference(kept.id, { text: '留着的收藏', images: ['图3'] })
+  await addReference(kept.id, { text: '留着的 Ref', images: ['图3'] })
 
-  // 导出 → 变成文字 → 再导入，收藏原样回来
+  // 导出 → 变成文字 → 再导入，Ref原样回来
   const exported = await exportAll()
   expect(exported.references).toHaveLength(3)
   await importAll(parseBackup(JSON.stringify(exported))!)
   expect((await exportAll()).references).toEqual(exported.references)
 
-  // 删项目：它的两条收藏一起没了，另一个项目的还在
+  // 删项目：它的两条 Ref 一起没了，另一个项目的还在
   await deleteProject(doomed.id)
   const left = (await exportAll()).references
   expect(left).toHaveLength(1)
@@ -177,10 +177,10 @@ test('收藏库：新增后能导出导入，删除项目时它的收藏一起�
   expect((await exportAll()).references).toHaveLength(0)
 })
 
-test('收藏库：编辑时可以删掉一张图、改文字，记录时间不变', async () => {
+test('Ref库：编辑时可以删掉一张图、改文字，记录时间不变', async () => {
   const { createProject, addReference, updateReference, exportAll } = await import('./db')
-  await createProject({ name: '编辑收藏用的项目', x: 0, y: 0 })
-  const project = (await exportAll()).projects.find((p) => p.name === '编辑收藏用的项目')!
+  await createProject({ name: '编辑 Ref 用的项目', x: 0, y: 0 })
+  const project = (await exportAll()).projects.find((p) => p.name === '编辑 Ref 用的项目')!
   await addReference(project.id, { text: '原来的说明', images: ['图1', '图2', '图3'] })
   const before = (await exportAll()).references.find((r) => r.projectId === project.id)!
 
