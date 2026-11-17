@@ -1,4 +1,4 @@
-// 整个应用用到的三种数据。和 plan.md 里的"数据结构"一一对应。
+// 整个应用用到的几种数据。和 plan.md 里的"数据结构"一一对应。
 
 export interface Project {
   id: string
@@ -46,12 +46,24 @@ export interface Note {
   createdAt: number
 }
 
+// 成就：自己比较满意的一件事
+export interface Achievement {
+  id: string
+  title: string
+  content?: string // 文字，选填
+  image?: string // 图片，选填。存的是压缩后的 data URL（一长串以 data:image/jpeg 开头的文字）
+  createdAt: number
+}
+
 // 导出 / 导入用的 JSON 文件格式
 export interface BackupFile {
   app: 'myworld'
-  version: 2 // 数据结构变了就加 1。版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表
+  // 数据结构变了就加 1。
+  // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements
+  version: 3
   exportedAt: number
   projects: Project[]
   tasks: Task[]
   notes: Note[]
+  achievements: Achievement[]
 }

@@ -4,12 +4,13 @@
 
 import Dexie, { type EntityTable } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
-import type { BackupFile, Hunch, Note, Project, Retro, Score, Task } from './types'
+import type { Achievement, BackupFile, Hunch, Note, Project, Retro, Score, Task } from './types'
 
 const db = new Dexie('myworld') as Dexie & {
   projects: EntityTable<Project, 'id'>
   tasks: EntityTable<Task, 'id'>
   notes: EntityTable<Note, 'id'>
+  achievements: EntityTable<Achievement, 'id'>
 }
 
 // 这里只需要列出"用来查询"的字段（索引），其他字段会自动保存。
@@ -27,6 +28,11 @@ db.version(2).upgrade((tx) =>
     .toCollection()
     .modify((project) => upgradeProject(project)),
 )
+
+// 版本 3：新增一张"成就"表。只写新增的表就行，原有的表保持不变。
+db.version(3).stores({
+  achievements: 'id',
+})
 
 // 把旧格式的项目改成新格式：hunch（一条）→ hunches（列表）。已经是新格式的不受影响。
 // 数据库升级和导入旧备份文件时都会用到。
@@ -87,6 +93,16 @@ export function useAllNotes(): Note[] {
     useLiveQuery(async () => {
       const notes = await db.notes.toArray()
       return notes.sort((a, b) => b.createdAt - a.createdAt)
+    }) ?? []
+  )
+}
+
+// 所有成就，最新的在最前面
+export function useAchievements(): Achievement[] {
+  return (
+    useLiveQuery(async () => {
+      const achievements = await db.achievements.toArray()
+      return achievements.sort((a, b) => b.createdAt - a.createdAt)
     }) ?? []
   )
 }
@@ -195,16 +211,37 @@ export async function deleteNote(id: string): Promise<void> {
   await db.notes.delete(id)
 }
 
+// ---------- 成就 ----------
+
+export async function addAchievement(input: {
+  title: string
+  content?: string
+  image?: string
+}): Promise<void> {
+  await db.achievements.add({
+    id: newId(),
+    title: input.title,
+    content: input.content,
+    image: input.image,
+    createdAt: Date.now(),
+  })
+}
+
+export async function deleteAchievement(id: string): Promise<void> {
+  await db.achievements.delete(id)
+}
+
 // ---------- 导出 / 导入 ----------
 
 export async function exportAll(): Promise<BackupFile> {
   return {
     app: 'myworld',
-    version: 2,
+    version: 3,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
     notes: await db.notes.toArray(),
+    achievements: await db.achievements.toArray(),
   }
 }
 
@@ -214,7 +251,7 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      (data.version === 1 || data.version === 2) &&
+      [1, 2, 3].includes(data.version) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes)
@@ -222,7 +259,8 @@ export function parseBackup(json: string): BackupFile | null {
 
     // 旧版本的备份也能导入：先转换成现在的格式
     data.projects.forEach(upgradeProject)
-    data.version = 2
+    if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
+    data.version = 3
     return data as BackupFile
   } catch {
     return null
@@ -231,13 +269,15 @@ export function parseBackup(json: string): BackupFile | null {
 
 // 导入会覆盖现有的全部数据
 export async function importAll(backup: BackupFile): Promise<void> {
-  await db.transaction('rw', db.projects, db.tasks, db.notes, async () => {
+  await db.transaction('rw', db.projects, db.tasks, db.notes, db.achievements, async () => {
     await db.projects.clear()
     await db.tasks.clear()
     await db.notes.clear()
+    await db.achievements.clear()
     await db.projects.bulkAdd(backup.projects)
     await db.tasks.bulkAdd(backup.tasks)
     await db.notes.bulkAdd(backup.notes)
+    await db.achievements.bulkAdd(backup.achievements)
   })
   // 刚导入完，现在的数据和手里那份备份文件一模一样，所以也算"刚备份过"
   markBackedUp()
@@ -251,7 +291,9 @@ export async function autoBackup(): Promise<boolean> {
   const backup = await exportAll()
 
   // 数据是空的就不备份。万一哪天浏览器数据丢了，不能让一份空白盖掉当天的好备份。
-  if (backup.projects.length === 0 && backup.notes.length === 0) return false
+  const isEmpty =
+    backup.projects.length === 0 && backup.notes.length === 0 && backup.achievements.length === 0
+  if (isEmpty) return false
 
   try {
     const response = await fetch('/api/backup', {

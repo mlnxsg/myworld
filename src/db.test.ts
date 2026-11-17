@@ -6,7 +6,14 @@
 import 'fake-indexeddb/auto'
 import { expect, test } from 'vitest'
 
-const oldHunch = { content: '旧格式的一条预判', createdAt: 1794800000000 }
+// Node 里也没有 localStorage（导入成功后会用它记"上次备份时间"），造一个最简单的假的。
+const fakeStorage = new Map<string, string>()
+globalThis.localStorage = {
+  getItem: (key: string) => fakeStorage.get(key) ?? null,
+  setItem: (key: string, value: string) => void fakeStorage.set(key, value),
+} as Storage
+
+const oldHunch ={ content: '旧格式的一条预判', createdAt: 1794800000000 }
 
 // 手工造一个"版本 1"的数据库，里面有一个旧格式的项目。
 // （Dexie 的版本 1 在 IndexedDB 里对应的数字是 10。）
@@ -70,8 +77,26 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   })
 
   const backup = parseBackup(oldFile)
-  expect(backup?.version).toBe(2)
+  expect(backup?.version).toBe(3)
+  expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
   expect(backup?.projects[0].hunches).toEqual([oldHunch])
+})
+
+test('成就：新增后能导出，导入后原样回来，删除后消失', async () => {
+  const { addAchievement, deleteAchievement, exportAll, importAll, parseBackup } = await import('./db')
+  await addAchievement({ title: '红烧肉', content: '第一次没烧糊', image: 'data:image/jpeg;base64,AAAA' })
+  await addAchievement({ title: '只有标题' })
+
+  const exported = await exportAll()
+  expect(exported.achievements).toHaveLength(2)
+
+  // 导出 → 变成文字 → 再读回来导入，内容应该一模一样
+  await importAll(parseBackup(JSON.stringify(exported))!)
+  const again = await exportAll()
+  expect(again.achievements).toEqual(exported.achievements)
+
+  await deleteAchievement(exported.achievements[0].id)
+  expect((await exportAll()).achievements).toHaveLength(1)
 })
 
 test('不是备份文件的内容会被拒绝', async () => {

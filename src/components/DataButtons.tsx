@@ -81,8 +81,8 @@ export default function DataButtons() {
             <AlertDialogTitle>导入会覆盖现有的全部数据</AlertDialogTitle>
             <AlertDialogDescription>
               {pending &&
-                `这份备份导出于 ${formatDate(pending.exportedAt)}，包含 ${pending.projects.length} 个项目、${pending.tasks.length} 条待办、${pending.notes.length} 条碎碎念。`}
-              现在白板和归档区里的内容会被全部替换，无法撤销。
+                `这份备份导出于 ${formatDate(pending.exportedAt)}，包含 ${pending.projects.length} 个项目、${pending.tasks.length} 条待办、${pending.notes.length} 条碎碎念、${pending.achievements.length} 条成就。`}
+              现在的全部内容会被替换，无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
