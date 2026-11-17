@@ -124,7 +124,12 @@ export default function ImagePicker({
   return (
     <div className="grid gap-1.5">
       {/* 已选的图片排成小方块；最后一格是"添加" */}
-      <div className={`grid gap-2 ${columns === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+      {/* columns 是最少几列；放在够宽的面板里（外面有 @container）会自动多排几列 */}
+      <div
+        className={`grid gap-2 ${
+          columns === 4 ? 'grid-cols-4 @xl:grid-cols-6 @3xl:grid-cols-8' : 'grid-cols-3'
+        }`}
+      >
         {images.map((image, index) => (
           <div key={index} className="relative aspect-square overflow-hidden rounded-lg bg-ink/5">
             <img src={image} alt={`第 ${index + 1} 张`} className="size-full object-cover" />

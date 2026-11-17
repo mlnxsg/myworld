@@ -37,7 +37,13 @@ interface Props {
 export default function ProjectDetail({ projectId, onClose }: Props) {
   return (
     <Sheet open={projectId !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full gap-0 overflow-y-auto p-6 text-ink sm:max-w-md!">
+      {/*
+        宽度：小屏幕铺满；大一点的屏幕占窗口一半，但不窄于 28rem。
+        末尾的 ! 表示"优先用这个"，盖过 Sheet 组件自带的宽度。
+        @container：让面板里的内容可以按"面板有多宽"来排版（比如图片格子多排几列），
+        而不是按整个窗口有多宽。
+      */}
+      <SheetContent className="@container w-full! gap-0 overflow-y-auto p-6 text-ink sm:w-1/2! sm:min-w-md sm:max-w-none! sm:p-8">
         {projectId && <DetailBody projectId={projectId} onClose={onClose} />}
       </SheetContent>
     </Sheet>

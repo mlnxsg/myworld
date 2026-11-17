@@ -85,7 +85,8 @@ function ReferenceCard({
   return (
     <li className="group grid gap-2 rounded-lg border border-ink/10 bg-white/70 p-2.5">
       {reference.images.length > 0 && (
-        <div className="grid grid-cols-4 gap-1.5">
+        // @xl: / @3xl:：面板（容器）够宽时一行多放几张
+        <div className="grid grid-cols-4 gap-1.5 @xl:grid-cols-6 @3xl:grid-cols-8">
           {reference.images.map((image, index) => (
             <button
               key={index}
