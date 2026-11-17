@@ -77,15 +77,15 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   })
 
   const backup = parseBackup(oldFile)
-  expect(backup?.version).toBe(3)
+  expect(backup?.version).toBe(4)
   expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
   expect(backup?.projects[0].hunches).toEqual([oldHunch])
 })
 
 test('成就：新增后能导出，导入后原样回来，删除后消失', async () => {
   const { addAchievement, deleteAchievement, exportAll, importAll, parseBackup } = await import('./db')
-  await addAchievement({ title: '红烧肉', content: '第一次没烧糊', image: 'data:image/jpeg;base64,AAAA' })
-  await addAchievement({ title: '只有标题' })
+  await addAchievement({ title: '红烧肉', content: '第一次没烧糊', images: ['data:image/jpeg;base64,AAAA'] })
+  await addAchievement({ title: '两张图', images: ['data:image/jpeg;base64,BBBB', 'data:image/jpeg;base64,CCCC'] })
 
   const exported = await exportAll()
   expect(exported.achievements).toHaveLength(2)
@@ -99,19 +99,46 @@ test('成就：新增后能导出，导入后原样回来，删除后消失', as
   expect((await exportAll()).achievements).toHaveLength(1)
 })
 
-test('成就：编辑时可以改标题、去掉图片、换标签，记录时间不变', async () => {
+test('成就：编辑时可以改标题、换图片和顺序、换标签，记录时间不变', async () => {
   const { addAchievement, updateAchievement, exportAll } = await import('./db')
-  await addAchievement({ title: '原标题', image: 'data:image/jpeg;base64,AAAA', tags: ['美食'] })
+  await addAchievement({ title: '原标题', images: ['图A', '图B'], tags: ['美食'] })
   const before = (await exportAll()).achievements.find((a) => a.title === '原标题')!
 
-  await updateAchievement(before.id, { title: '新标题', content: '补了文字', tags: ['美食', '周末'] })
+  await updateAchievement(before.id, {
+    title: '新标题',
+    content: '补了文字',
+    images: ['图B', '图A', '图C'], // 换了封面，又加了一张
+    tags: ['美食', '周末'],
+  })
 
   const after = (await exportAll()).achievements.find((a) => a.id === before.id)!
   expect(after.title).toBe('新标题')
   expect(after.content).toBe('补了文字')
-  expect(after.image).toBeUndefined()
+  expect(after.images).toEqual(['图B', '图A', '图C'])
   expect(after.tags).toEqual(['美食', '周末'])
   expect(after.createdAt).toBe(before.createdAt)
+})
+
+test('版本 3 的备份里，成就的一张图（image）导入时变成 images 列表', async () => {
+  const { parseBackup } = await import('./db')
+  const v3File = JSON.stringify({
+    app: 'myworld',
+    version: 3,
+    exportedAt: 1,
+    projects: [],
+    tasks: [],
+    notes: [],
+    achievements: [
+      { id: 'a1', title: '有图', image: 'data:image/jpeg;base64,AAAA', createdAt: 1 },
+      { id: 'a2', title: '没图', createdAt: 2 },
+    ],
+  })
+
+  const backup = parseBackup(v3File)!
+  expect(backup.version).toBe(4)
+  expect(backup.achievements[0].images).toEqual(['data:image/jpeg;base64,AAAA'])
+  expect('image' in backup.achievements[0]).toBe(false)
+  expect(backup.achievements[1].images).toEqual([])
 })
 
 test('不是备份文件的内容会被拒绝', async () => {

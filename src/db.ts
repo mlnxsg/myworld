@@ -34,6 +34,23 @@ db.version(3).stores({
   achievements: 'id',
 })
 
+// 版本 4：成就的图片从"一张"（image）改成"多张"（images）。表的索引没变，只转换数据。
+db.version(4).upgrade((tx) =>
+  tx
+    .table('achievements')
+    .toCollection()
+    .modify((achievement) => upgradeAchievement(achievement)),
+)
+
+// 把旧格式的成就改成新格式：image（一张）→ images（列表）。已经是新格式的不受影响。
+// 数据库升级和导入旧备份文件时都会用到。
+function upgradeAchievement(achievement: Achievement & { image?: string }): void {
+  if (!Array.isArray(achievement.images)) {
+    achievement.images = achievement.image ? [achievement.image] : []
+  }
+  delete achievement.image
+}
+
 // 把旧格式的项目改成新格式：hunch（一条）→ hunches（列表）。已经是新格式的不受影响。
 // 数据库升级和导入旧备份文件时都会用到。
 function upgradeProject(project: Project & { hunch?: Hunch }): void {
@@ -217,7 +234,7 @@ export async function deleteNote(id: string): Promise<void> {
 export interface AchievementInput {
   title: string
   content?: string
-  image?: string
+  images: string[] // 第一张是封面
   tags?: string[]
 }
 
@@ -226,18 +243,18 @@ export async function addAchievement(input: AchievementInput): Promise<void> {
     id: newId(),
     title: input.title,
     content: input.content,
-    image: input.image,
+    images: input.images,
     tags: input.tags ?? [],
     createdAt: Date.now(),
   })
 }
 
-// 编辑：用新内容替换。content 或 image 为 undefined 表示去掉它。记录的时间不变。
+// 编辑：用新内容替换。content 为 undefined 表示去掉它。记录的时间不变。
 export async function updateAchievement(id: string, input: AchievementInput): Promise<void> {
   await db.achievements.update(id, {
     title: input.title,
     content: input.content,
-    image: input.image,
+    images: input.images,
     tags: input.tags ?? [],
   })
 }
@@ -251,7 +268,7 @@ export async function deleteAchievement(id: string): Promise<void> {
 export async function exportAll(): Promise<BackupFile> {
   return {
     app: 'myworld',
-    version: 3,
+    version: 4,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
@@ -266,7 +283,7 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      [1, 2, 3].includes(data.version) &&
+      [1, 2, 3, 4].includes(data.version) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes)
@@ -275,7 +292,8 @@ export function parseBackup(json: string): BackupFile | null {
     // 旧版本的备份也能导入：先转换成现在的格式
     data.projects.forEach(upgradeProject)
     if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
-    data.version = 3
+    data.achievements.forEach(upgradeAchievement)
+    data.version = 4
     return data as BackupFile
   } catch {
     return null

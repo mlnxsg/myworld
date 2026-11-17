@@ -51,9 +51,9 @@ export interface Achievement {
   id: string
   title: string
   content?: string // 文字，选填
-  // 图片。新记录必填；类型上仍写成可选，是因为早期可能存过没有图片的记录。
-  // 存的是压缩后的 data URL（一长串以 data:image/jpeg 开头的文字）
-  image?: string
+  // 图片，可以有多张，第一张是封面。新记录至少要有一张；早期可能存过没有图片的记录。
+  // 每张存的是压缩后的 data URL（一长串以 data:image/jpeg 开头的文字）
+  images: string[]
   tags?: string[] // 标签，可以有多个；早期的记录没有这个字段，当作没有标签
   createdAt: number
 }
@@ -62,8 +62,9 @@ export interface Achievement {
 export interface BackupFile {
   app: 'myworld'
   // 数据结构变了就加 1。
-  // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements
-  version: 3
+  // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements；
+  // 版本 4：成就的 image（一张）改成 images（多张）
+  version: 4
   exportedAt: number
   projects: Project[]
   tasks: Task[]
