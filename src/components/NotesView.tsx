@@ -1,6 +1,6 @@
-// 碎碎念区：把所有碎碎念汇总在一起，按时间倒序，按天分组。
+// 说说区：把所有说说汇总在一起，按时间倒序，按天分组。
 // - 顶部可以直接记一条"随手记"：不属于任何项目的想法。
-// - 项目里的碎碎念在这里只看不改，点项目名可以打开那个项目的详情。
+// - 项目里的说说在这里只看不改，点项目名可以打开那个项目的详情。
 // - 随手记没有别的地方可以管理，所以在这里可以删除。
 
 import { X } from 'lucide-react'
@@ -20,7 +20,7 @@ export default function NotesView({ onOpenProject }: Props) {
   const notes = useAllNotes()
   const projects = new Map(useAllProjects().map((project) => [project.id, project]))
 
-  // 把连续的、同一天的碎碎念放进同一组。notes 已经按时间倒序排好，
+  // 把连续的、同一天的说说放进同一组。notes 已经按时间倒序排好，
   // 所以只需要看"这一条和上一组是不是同一天"。
   const days: { date: string; notes: Note[] }[] = []
   for (const note of notes) {
@@ -60,10 +60,10 @@ export default function NotesView({ onOpenProject }: Props) {
 
         <div className="sm:min-h-0 sm:overflow-y-auto">
           <div className="mx-auto grid max-w-2xl gap-6 px-5 py-6 sm:py-8">
-            <h2 className="font-heading text-2xl font-bold">碎碎念</h2>
+            <h2 className="font-heading text-2xl font-bold">说说</h2>
             <QuickNoteForm />
 
-            {notes.length === 0 && <p className="font-heading text-ink/40">暂无碎碎念</p>}
+            {notes.length === 0 && <p className="font-heading text-ink/40">暂无说说</p>}
 
             {days.map((day) => (
               <section key={day.date}>

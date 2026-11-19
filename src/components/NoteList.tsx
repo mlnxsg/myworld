@@ -1,4 +1,4 @@
-// 项目详情里的"碎碎念"部分。
+// 项目详情里的"说说"部分。
 
 import { X } from 'lucide-react'
 import { useState } from 'react'
@@ -26,7 +26,7 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
 
   return (
     <section>
-      <h3 className="mb-2 font-heading text-base font-semibold">碎碎念</h3>
+      <h3 className="mb-2 font-heading text-base font-semibold">说说</h3>
 
       {!readOnly && (
         <form onSubmit={handleSubmit} className="grid gap-2">
@@ -45,7 +45,7 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
       )}
 
       {notes.length === 0 ? (
-        <p className="py-2 text-sm text-ink/40">暂无碎碎念</p>
+        <p className="py-2 text-sm text-ink/40">暂无说说</p>
       ) : (
         <ul className="mt-2">
           {notes.map((note) => (
@@ -60,7 +60,7 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
                     variant="ghost"
                     className="opacity-30 transition-opacity group-hover:opacity-100"
                     onClick={() => deleteNote(note.id)}
-                    aria-label="删除这条碎碎念"
+                    aria-label="删除这条说说"
                   >
                     <X />
                   </Button>

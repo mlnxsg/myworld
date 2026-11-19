@@ -132,7 +132,7 @@ export function useTasks(projectId: string): Task[] {
   )
 }
 
-// 碎碎念按时间倒序：最新的在最上面
+// 说说按时间倒序：最新的在最上面
 // 某个项目的 Ref，最新的在最上面
 export function useReferences(projectId: string): Reference[] {
   return (
@@ -167,7 +167,7 @@ export function useNotes(projectId: string): Note[] {
   )
 }
 
-// 所有项目的碎碎念汇总，同样是最新的在最上面（碎碎念区用）
+// 所有项目的说说汇总，同样是最新的在最上面（说说区用）
 export function useAllNotes(): Note[] {
   return (
     useLiveQuery(async () => {
@@ -258,7 +258,7 @@ export async function restoreProject(id: string): Promise<void> {
   await db.projects.update(id, { status: 'active', archivedAt: undefined })
 }
 
-// 删除项目时，把它的待办、碎碎念和 Ref 一起删掉。
+// 删除项目时，把它的待办、说说和 Ref 一起删掉。
 // transaction 保证这几步要么全部成功，要么全部不做。
 export async function deleteProject(id: string): Promise<void> {
   await db.transaction('rw', db.projects, db.tasks, db.notes, db.references, async () => {
@@ -370,9 +370,9 @@ export async function moveTodoToProject(id: string, projectId: string, score: Sc
   })
 }
 
-// ---------- 碎碎念 ----------
+// ---------- 说说 ----------
 
-// projectId 传 null 表示"随手记"：不属于任何项目的碎碎念
+// projectId 传 null 表示"随手记"：不属于任何项目的说说
 export async function addNote(projectId: string | null, content: string): Promise<void> {
   await db.notes.add({ id: newId(), projectId, content, createdAt: Date.now() })
 }
