@@ -54,9 +54,11 @@ export default function RoutineNotebook() {
         )}
         <ul className="mx-3 divide-y divide-folder-edge">
           {routines.map((routine) => (
-            <li key={routine.id} className="py-1.5">
+            <li key={routine.id}>
               {editingId === routine.id ? (
-                <RoutineForm routine={routine} onDone={() => setEditingId(null)} />
+                <div className="py-1.5">
+                  <RoutineForm routine={routine} onDone={() => setEditingId(null)} />
+                </div>
               ) : (
                 <RoutineEntryMenu
                   content={routine.content}
@@ -109,7 +111,7 @@ function RoutineEntryMenu({
     <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger
         type="button"
-        className="block w-full cursor-pointer rounded text-left text-xs wrap-break-word whitespace-pre-wrap outline-none hover:bg-folder focus-visible:ring-2 focus-visible:ring-gold aria-expanded:bg-folder"
+        className="block w-full cursor-pointer py-1.5 text-left text-xs wrap-break-word whitespace-pre-wrap outline-none hover:bg-folder focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset aria-expanded:bg-folder"
       >
         {content}
       </DropdownMenu.Trigger>
