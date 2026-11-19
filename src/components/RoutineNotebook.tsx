@@ -33,7 +33,7 @@ export default function RoutineNotebook() {
         aria-expanded={expanded}
         aria-controls={bodyId}
         onClick={() => setExpanded(!expanded)}
-        className="flex shrink-0 items-center justify-between gap-2 bg-folder px-3 py-2 text-left font-heading text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
+        className="flex shrink-0 items-center justify-between gap-2 bg-white px-3 py-2 text-left font-heading text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
       >
         我的日常
         <ChevronDown
@@ -111,7 +111,7 @@ function RoutineEntryMenu({
     <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger
         type="button"
-        className="block w-full cursor-pointer py-1.5 text-left text-xs wrap-break-word whitespace-pre-wrap outline-none hover:bg-folder focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset aria-expanded:bg-folder"
+        className="block w-full cursor-pointer py-1.5 text-left text-xs wrap-break-word whitespace-pre-wrap outline-none hover:bg-neutral-100 focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset aria-expanded:bg-neutral-100"
       >
         {content}
       </DropdownMenu.Trigger>
