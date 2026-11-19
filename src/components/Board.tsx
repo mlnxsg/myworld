@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAllTasks, useProjects } from '@/db'
 import FolderCard from './FolderCard'
 import NewProjectDialog from './NewProjectDialog'
+import RoutineNotebook from './RoutineNotebook'
 
 interface Props {
   onOpenProject: (projectId: string) => void
@@ -39,27 +40,31 @@ export default function Board({ onOpenProject }: Props) {
   const height = Math.max(0, ...projects.map((p) => p.y)) + EXTRA_SPACE
 
   return (
-    <div className="h-full overflow-auto bg-paper">
-      <div
-        onDoubleClick={handleDoubleClick}
-        className="board-dots relative min-h-full min-w-full"
-        style={{ width, height }}
-      >
-        {projects.length === 0 && (
-          <p className="pointer-events-none absolute inset-x-0 top-1/3 text-center font-heading text-ink/40">
-            双击新建项目
-          </p>
-        )}
+    <div className="relative h-full">
+      <div className="isolate h-full overflow-auto bg-paper">
+        <div
+          onDoubleClick={handleDoubleClick}
+          className="board-dots relative min-h-full min-w-full"
+          style={{ width, height }}
+        >
+          {projects.length === 0 && (
+            <p className="pointer-events-none absolute inset-x-0 top-1/3 text-center font-heading text-ink/40">
+              双击新建项目
+            </p>
+          )}
 
-        {sorted.map((project) => (
-          <FolderCard
-            key={project.id}
-            project={project}
-            tasks={tasks.filter((task) => task.projectId === project.id)}
-            onOpen={() => onOpenProject(project.id)}
-          />
-        ))}
+          {sorted.map((project) => (
+            <FolderCard
+              key={project.id}
+              project={project}
+              tasks={tasks.filter((task) => task.projectId === project.id)}
+              onOpen={() => onOpenProject(project.id)}
+            />
+          ))}
+        </div>
       </div>
+
+      <RoutineNotebook />
 
       <NewProjectDialog position={newPosition} onClose={() => setNewPosition(null)} />
     </div>

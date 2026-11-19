@@ -69,6 +69,13 @@ export interface Reference {
   createdAt: number
 }
 
+// 白板「我的日常」中的一条记录
+export interface Routine {
+  id: string
+  content: string
+  createdAt: number
+}
+
 // 导出 / 导入用的 JSON 文件格式
 export interface BackupFile {
   app: 'myworld'
@@ -77,11 +84,13 @@ export interface BackupFile {
   // 版本 4：成就的 image（一张）改成 images（多张）；版本 5：新增 references（Ref 库）
   // 版本 6：Ref 可以没有项目归属，并记录查看状态
   // 版本 7：目标与提醒增加独立 ID，方便编辑和删除
-  version: 7
+  // 版本 8：新增 routines（我的日常）
+  version: 8
   exportedAt: number
   projects: Project[]
   tasks: Task[]
   notes: Note[]
   achievements: Achievement[]
   references: Reference[]
+  routines: Routine[]
 }

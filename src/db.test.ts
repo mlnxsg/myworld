@@ -77,7 +77,7 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   })
 
   const backup = parseBackup(oldFile)
-  expect(backup?.version).toBe(7)
+  expect(backup?.version).toBe(8)
   expect(backup?.references).toEqual([]) // 旧备份里没有 Ref，补一个空列表
   expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
   expect(backup?.projects[0].hunches).toEqual([{ ...oldHunch, id: expect.any(String) }])
@@ -136,7 +136,7 @@ test('版本 3 的备份里，成就的一张图（image）导入时变成 image
   })
 
   const backup = parseBackup(v3File)!
-  expect(backup.version).toBe(7)
+  expect(backup.version).toBe(8)
   expect(backup.achievements[0].images).toEqual(['data:image/jpeg;base64,AAAA'])
   expect('image' in backup.achievements[0]).toBe(false)
   expect(backup.achievements[1].images).toEqual([])
@@ -221,8 +221,8 @@ test('Ref 库：支持标记旧 Ref，独立 Ref 和查看状态会随备份恢�
 test('只存了无项目归属的 Ref 时也会自动备份', async () => {
   const { addReference, autoBackup, exportAll, importAll } = await import('./db')
   await importAll({
-    app: 'myworld', version: 7, exportedAt: 1,
-    projects: [], tasks: [], notes: [], achievements: [], references: [],
+    app: 'myworld', version: 8, exportedAt: 1,
+    projects: [], tasks: [], notes: [], achievements: [], references: [], routines: [],
   })
   await addReference(null, { text: '只备份这条 Ref', images: [] })
   const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
@@ -267,4 +267,36 @@ test('目标与提醒：能独立编辑和删除时间相同的旧记录，并�
     { id: expect.any(String), content: '后来添加', createdAt: expect.any(Number) },
   ])
   expect(parseBackup(JSON.stringify(exported))?.projects).toEqual(exported.projects)
+})
+
+test('我的日常：可编辑、删除和备份，旧备份可导入', async () => {
+  const { addRoutine, autoBackup, deleteRoutine, exportAll, importAll, parseBackup, updateRoutine } =
+    await import('./db')
+  const oldBackup = parseBackup(JSON.stringify({
+    app: 'myworld', version: 7, exportedAt: 1,
+    projects: [], tasks: [], notes: [], achievements: [], references: [],
+  }))!
+  expect(oldBackup.routines).toEqual([])
+  await importAll(oldBackup)
+
+  await addRoutine('早上读书')
+  const [entry] = (await exportAll()).routines
+  await updateRoutine(entry.id, '早上读书\n晚上散步')
+  const exported = await exportAll()
+  expect(exported.routines).toEqual([{ ...entry, content: '早上读书\n晚上散步' }])
+
+  const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
+  try {
+    expect(await autoBackup()).toBe(true)
+    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body)).routines).toEqual(exported.routines)
+  } finally {
+    fetch.mockRestore()
+  }
+
+  await deleteRoutine(entry.id)
+  expect((await exportAll()).routines).toEqual([])
+  await importAll(parseBackup(JSON.stringify(exported))!)
+  expect((await exportAll()).routines).toEqual(exported.routines)
+  await importAll(oldBackup)
+  expect((await exportAll()).routines).toEqual([])
 })
