@@ -29,7 +29,8 @@ import TagInput from './TagInput'
 
 const ALL = Symbol('all')
 const UNTAGGED = Symbol('untagged')
-type Category = string | typeof ALL | typeof UNTAGGED
+type TodoCategory = string | typeof UNTAGGED
+type Category = TodoCategory | typeof ALL
 
 export default function TodoView() {
   const todos = useTodos()
@@ -41,16 +42,31 @@ export default function TodoView() {
   const formTrigger = useRef<HTMLButtonElement | null>(null)
   const moving = todos.find((todo) => todo.id === movingId)
   const deleting = todos.find((todo) => todo.id === deletingId)
-  const tags = [...new Set(todos.flatMap((todo) => todo.tags))].sort((a, b) => a.localeCompare(b, 'zh-CN'))
-  const category = typeof filter === 'string' && !tags.includes(filter) ? ALL : filter
+  const todosByCategory = new Map<TodoCategory, Todo[]>()
+  for (const todo of todos) {
+    const categories: TodoCategory[] = todo.tags.length ? todo.tags : [UNTAGGED]
+    for (const category of categories) {
+      const items = todosByCategory.get(category)
+      if (items) items.push(todo)
+      else todosByCategory.set(category, [todo])
+    }
+  }
+  const tags = [...todosByCategory.keys()]
+    .filter((tag): tag is string => typeof tag === 'string')
+    .sort((a, b) => a.localeCompare(b, 'zh-CN'))
+  const category = typeof filter === 'string' && !todosByCategory.has(filter) ? ALL : filter
   const categories: { value: Category; label: string }[] = [
     { value: ALL, label: '全部' },
     { value: UNTAGGED, label: '无标签' },
     ...tags.map((tag) => ({ value: tag, label: tag })),
   ]
-  const shown = category === ALL
-    ? todos
-    : todos.filter((todo) => category === UNTAGGED ? todo.tags.length === 0 : todo.tags.includes(category))
+  const groups = categories.flatMap(({ value, label }) => {
+    if (value === ALL || (category !== ALL && category !== value)) return []
+    const items = todosByCategory.get(value)
+    if (!items?.length) return []
+    const key = typeof value === 'string' ? `tag:${value}` : value.description
+    return [{ key, label, items }]
+  })
 
   return (
     <div className="h-full overflow-y-auto bg-paper">
@@ -86,61 +102,37 @@ export default function TodoView() {
           </div>
         )}
         <div role="status" className="mb-3 text-xs text-ink/65 empty:hidden">{notice}</div>
-        {shown.length === 0 ? (
+        {groups.length === 0 ? (
           <p className="font-heading text-ink/40">暂无待办</p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {shown.map((todo) => (
-              <li
-                key={todo.id}
-                className="group flex items-center gap-2 self-start rounded-xl border border-folder-edge bg-white px-2.5 py-1.5"
-              >
-                <Checkbox
-                  checked={todo.done}
-                  onCheckedChange={(checked) => setTodoDone(todo.id, checked === true)}
-                  aria-label={`完成：${todo.title}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotice('')
-                    setMovingId(todo.id)
-                  }}
-                  title="转入项目"
-                  aria-label={todo.title}
-                  aria-describedby={todo.tags.length ? `todo-tags-${todo.id}` : undefined}
-                  className="min-w-0 flex-1 cursor-pointer rounded text-left font-heading text-sm font-semibold wrap-break-word hover:text-gold"
-                >
-                  <span className={todo.done ? 'text-ink/50 line-through' : undefined}>{todo.title}</span>
-                  {todo.tags.length > 0 && (
-                    <span id={`todo-tags-${todo.id}`} className="font-sans text-xs font-normal text-gold/80">
-                      {todo.tags.map((tag) => (
-                        <span key={tag} className="ml-1.5 inline-block max-w-full">#{tag}</span>
-                      ))}
-                    </span>
-                  )}
-                  <ArrowRight className="ml-1.5 inline-block size-3 align-middle text-ink/45" aria-hidden="true" />
-                </button>
-                <div className="flex shrink-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0">
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    aria-label="编辑待办"
-                    aria-haspopup="dialog"
-                    onClick={(event) => {
-                      formTrigger.current = event.currentTarget
-                      setEditing(todo)
-                    }}
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button size="icon-xs" variant="ghost" aria-label="删除待办" onClick={() => setDeletingId(todo.id)}>
-                    <X />
-                  </Button>
-                </div>
-              </li>
+          <div className="grid gap-3">
+            {groups.map(({ key, label, items }) => (
+              <section key={key} className="overflow-hidden rounded-xl border border-folder-edge bg-white">
+                {category === ALL && tags.length > 0 && (
+                  <h3 className="border-b border-folder-edge/70 bg-folder/45 px-2.5 py-1.5 text-xs font-medium text-ink/70">
+                    {label}
+                  </h3>
+                )}
+                <ul aria-label={label} className="divide-y divide-folder-edge/70">
+                  {items.map((todo) => (
+                    <TodoRow
+                      key={todo.id}
+                      todo={todo}
+                      onMove={() => {
+                        setNotice('')
+                        setMovingId(todo.id)
+                      }}
+                      onEdit={(trigger) => {
+                        formTrigger.current = trigger
+                        setEditing(todo)
+                      }}
+                      onDelete={() => setDeletingId(todo.id)}
+                    />
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
@@ -206,6 +198,62 @@ export default function TodoView() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+function TodoRow({
+  todo,
+  onMove,
+  onEdit,
+  onDelete,
+}: {
+  todo: Todo
+  onMove: () => void
+  onEdit: (trigger: HTMLButtonElement) => void
+  onDelete: () => void
+}) {
+  const tagsId = useId()
+
+  return (
+    <li className="group flex items-center gap-2 px-2.5 py-1.5">
+      <Checkbox
+        checked={todo.done}
+        onCheckedChange={(checked) => setTodoDone(todo.id, checked === true)}
+        aria-label={`完成：${todo.title}`}
+      />
+      <button
+        type="button"
+        onClick={onMove}
+        title="转入项目"
+        aria-label={todo.title}
+        aria-describedby={todo.tags.length ? tagsId : undefined}
+        className="min-w-0 flex-1 cursor-pointer rounded text-left font-heading text-sm font-semibold wrap-break-word hover:text-gold"
+      >
+        <span className={todo.done ? 'text-ink/50 line-through' : undefined}>{todo.title}</span>
+        {todo.tags.length > 0 && (
+          <span id={tagsId} className="font-sans text-xs font-normal text-gold/80">
+            {todo.tags.map((tag) => (
+              <span key={tag} className="ml-1.5 inline-block max-w-full">#{tag}</span>
+            ))}
+          </span>
+        )}
+        <ArrowRight className="ml-1.5 inline-block size-3 align-middle text-ink/45" aria-hidden="true" />
+      </button>
+      <div className="flex shrink-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0">
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          aria-label="编辑待办"
+          aria-haspopup="dialog"
+          onClick={(event) => onEdit(event.currentTarget)}
+        >
+          <Pencil />
+        </Button>
+        <Button size="icon-xs" variant="ghost" aria-label="删除待办" onClick={onDelete}>
+          <X />
+        </Button>
+      </div>
+    </li>
   )
 }
 
