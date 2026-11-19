@@ -105,9 +105,12 @@ export default function TodoView() {
         {groups.length === 0 ? (
           <p className="font-heading text-ink/40">暂无待办</p>
         ) : (
-          <div className="grid gap-3">
+          <div className="columns-[20rem] gap-4">
             {groups.map(({ key, label, items }) => (
-              <section key={key} className="overflow-hidden rounded-xl border border-folder-edge bg-white">
+              <section
+                key={key}
+                className="mb-4 break-inside-avoid overflow-hidden rounded-xl border border-folder-edge bg-white"
+              >
                 {category === ALL && tags.length > 0 && (
                   <h3 className="border-b border-folder-edge/70 bg-folder/45 px-2.5 py-1.5 text-xs font-medium text-ink/70">
                     {label}
