@@ -4,7 +4,7 @@
 // - 随手记没有别的地方可以管理，所以在这里可以删除。
 
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { addNote, deleteNote, useAllNotes, useAllProjects } from '@/db'
@@ -17,7 +17,9 @@ interface Props {
 
 export default function NotesView({ onOpenProject }: Props) {
   const notes = useAllNotes()
-  const projects = useAllProjects()
+  const projects = new Map(useAllProjects().map((project) => [project.id, project]))
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const contentPane = useRef<HTMLDivElement>(null)
 
   // 把连续的、同一天的碎碎念放进同一组。notes 已经按时间倒序排好，
   // 所以只需要看"这一条和上一组是不是同一天"。
@@ -32,65 +34,130 @@ export default function NotesView({ onOpenProject }: Props) {
     }
   }
 
+  const diaryDays = days
+    .map(({ date, notes }) => ({ date, notes: notes.filter((note) => note.projectId === null) }))
+    .filter((day) => day.notes.length > 0)
+  const selectedDay = diaryDays.find((day) => day.date === selectedDate)
+  const visibleDays = selectedDay
+    ? [{ ...selectedDay, notes: [...selectedDay.notes].reverse() }]
+    : days
+
+  function selectDate(date: string | null) {
+    setSelectedDate(date)
+    contentPane.current?.scrollTo({ top: 0 })
+  }
+
+  async function handleDelete(noteId: string) {
+    await deleteNote(noteId)
+    if (selectedDay?.notes.length === 1 && selectedDay.notes[0].id === noteId) {
+      setSelectedDate((date) => (date === selectedDay.date ? null : date))
+    }
+  }
+
   return (
-    <div className="h-full overflow-auto bg-paper">
-      <div className="mx-auto grid max-w-2xl gap-6 px-5 py-8">
-        <h2 className="font-heading text-2xl font-bold">碎碎念</h2>
-
-        <QuickNoteForm />
-
-        {notes.length === 0 && (
-          <p className="font-heading text-ink/40">
-            暂无碎碎念
-          </p>
-        )}
-
-        {days.map((day) => (
-          <section key={day.date}>
-            <h3 className="mb-2 border-b border-ink/10 pb-1 text-xs text-ink/50 tabular-nums">
-              {day.date}
-            </h3>
-            <ul className="grid gap-3">
-              {day.notes.map((note) => {
-                const project = projects.find((p) => p.id === note.projectId)
-                return (
-                  <li key={note.id} className="group flex gap-3">
-                    <time className="w-10 shrink-0 pt-0.5 text-xs text-ink/40 tabular-nums">
-                      {formatTime(note.createdAt)}
-                    </time>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                      {project ? (
-                        <button
-                          type="button"
-                          onClick={() => onOpenProject(project.id)}
-                          className="mt-1 text-xs text-gold hover:underline"
-                        >
-                          {project.name}
-                          {project.status === 'archived' && '（已归档）'}
-                        </button>
-                      ) : (
-                        <span className="mt-1 block text-xs text-ink/40">随手记</span>
-                      )}
-                    </div>
-                    {/* 只有随手记能在这里删除；项目里的碎碎念去项目详情里删 */}
-                    {note.projectId === null && (
-                      <Button
-                        size="icon-xs"
-                        variant="ghost"
-                        className="opacity-30 transition-opacity group-hover:opacity-100"
-                        onClick={() => deleteNote(note.id)}
-                        aria-label="删除这条随手记"
-                      >
-                        <X />
-                      </Button>
-                    )}
+    <div className="h-full overflow-y-auto bg-paper sm:overflow-hidden">
+      <div className="mx-auto max-w-5xl sm:grid sm:h-full sm:grid-cols-[10rem_minmax(0,1fr)]">
+        <nav
+          aria-label="随手记时间线"
+          className="border-b border-ink/10 px-5 py-4 sm:min-h-0 sm:overflow-y-auto sm:border-r sm:border-b-0 sm:py-8"
+        >
+          <h2 className="mb-2 font-heading text-sm font-semibold">随手记时间线</h2>
+          <button
+            type="button"
+            aria-current={selectedDay ? undefined : 'true'}
+            onClick={() => selectDate(null)}
+            className="rounded-md px-2 py-1 text-sm text-ink/70 hover:bg-folder aria-[current=true]:bg-folder aria-[current=true]:font-semibold aria-[current=true]:text-ink"
+          >
+            全部碎碎念
+          </button>
+          {diaryDays.length === 0 ? (
+            <p className="mt-3 text-xs text-ink/50">暂无随手记</p>
+          ) : (
+            <div className="mt-3 max-h-32 overflow-y-auto overscroll-contain sm:max-h-none sm:overflow-visible">
+              <ol className="ml-2 border-l border-folder-edge">
+                {diaryDays.map(({ date }) => (
+                  <li key={date} className="relative pl-3">
+                    <span
+                      aria-hidden="true"
+                      className={`absolute top-1/2 left-0 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full ${selectedDay?.date === date ? 'bg-gold' : 'bg-folder-edge'}`}
+                    />
+                    <button
+                      type="button"
+                      aria-current={selectedDay?.date === date ? 'date' : undefined}
+                      onClick={() => selectDate(date)}
+                      className="rounded-md px-2 py-1 text-xs text-ink/70 tabular-nums hover:bg-folder aria-[current=date]:bg-folder aria-[current=date]:font-semibold aria-[current=date]:text-ink"
+                    >
+                      <time dateTime={date}>{date}</time>
+                    </button>
                   </li>
-                )
-              })}
-            </ul>
-          </section>
-        ))}
+                ))}
+              </ol>
+            </div>
+          )}
+        </nav>
+
+        <div ref={contentPane} className="sm:min-h-0 sm:overflow-y-auto">
+          <div className="mx-auto grid max-w-2xl gap-6 px-5 py-6 sm:py-8">
+            <h2 className="font-heading text-2xl font-bold tabular-nums">
+              {selectedDay ? <time dateTime={selectedDay.date}>{selectedDay.date}</time> : '碎碎念'}
+            </h2>
+
+            <div hidden={selectedDay !== undefined}>
+              <QuickNoteForm />
+            </div>
+
+            {notes.length === 0 && <p className="font-heading text-ink/40">暂无碎碎念</p>}
+
+            {visibleDays.map((day) => (
+              <section key={day.date}>
+                {!selectedDay && (
+                  <h3 className="mb-2 border-b border-ink/10 pb-1 text-xs text-ink/50 tabular-nums">
+                    {day.date}
+                  </h3>
+                )}
+                <ul className="grid gap-3">
+                  {day.notes.map((note) => {
+                    const project = note.projectId === null ? undefined : projects.get(note.projectId)
+                    return (
+                      <li key={note.id} className="group flex gap-3">
+                        <time className="w-10 shrink-0 pt-0.5 text-xs text-ink/40 tabular-nums">
+                          {formatTime(note.createdAt)}
+                        </time>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm wrap-break-word whitespace-pre-wrap">{note.content}</p>
+                          {project && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenProject(project.id)}
+                              className="mt-1 text-xs text-gold hover:underline"
+                            >
+                              {project.name}
+                              {project.status === 'archived' && '（已归档）'}
+                            </button>
+                          )}
+                          {!project && !selectedDay && (
+                            <span className="mt-1 block text-xs text-ink/40">随手记</span>
+                          )}
+                        </div>
+                        {note.projectId === null && (
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            className="opacity-30 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                            onClick={() => handleDelete(note.id)}
+                            aria-label="删除这条随手记"
+                          >
+                            <X />
+                          </Button>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
