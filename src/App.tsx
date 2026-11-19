@@ -46,7 +46,7 @@ export default function App() {
             Ref 库
           </NavButton>
           <NavButton active={view === 'achievements'} onClick={() => setView('achievements')}>
-            成就
+            经验总结
           </NavButton>
         </nav>
 

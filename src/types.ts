@@ -46,12 +46,12 @@ export interface Note {
   createdAt: number
 }
 
-// 成就：自己比较满意的一件事
+// 经验总结：沿用 Achievement 和备份中的 achievements 字段
 export interface Achievement {
   id: string
   title: string
   content?: string // 文字，选填
-  // 图片，可以有多张，第一张是封面。新记录至少要有一张；早期可能存过没有图片的记录。
+  // 图片选填，可以有多张，第一张是封面。
   // 每张存的是压缩后的 data URL（一长串以 data:image/jpeg 开头的文字）
   images: string[]
   tags?: string[] // 标签，可以有多个；早期的记录没有这个字段，当作没有标签

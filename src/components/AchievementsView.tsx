@@ -1,4 +1,4 @@
-// 成就区：记下自己比较满意的事，每条配一张或几张图，可以加几个标签。
+// 经验总结：记录经验，每条可以附图片和标签。
 // 顶部可以按标签筛选。
 
 import { Images, Pencil, Plus, X } from 'lucide-react'
@@ -29,10 +29,11 @@ import { addAchievement, deleteAchievement, updateAchievement, useAchievements }
 import { formatDate } from '@/lib/format'
 import type { Achievement } from '@/types'
 
-const MAX_IMAGES = 9 // 一条成就最多几张图
 import ImagePicker from './ImagePicker'
 import Lightbox from './Lightbox'
 import TagInput from './TagInput'
+
+const MAX_IMAGES = 9
 
 export default function AchievementsView() {
   const achievements = useAchievements()
@@ -72,7 +73,7 @@ export default function AchievementsView() {
     <div className="h-full overflow-auto bg-paper">
       <div className="mx-auto max-w-4xl px-5 py-8">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-heading text-2xl font-bold">成就</h2>
+          <h2 className="font-heading text-2xl font-bold">经验总结</h2>
           <Button size="sm" onClick={() => setEditing('new')}>
             <Plus />
             新增
@@ -123,7 +124,7 @@ export default function AchievementsView() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>删除「{deleting?.title}」？</AlertDialogTitle>
-            <AlertDialogDescription>图片将一并删除，且无法恢复。</AlertDialogDescription>
+            <AlertDialogDescription>删除后无法恢复。</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
@@ -207,7 +208,7 @@ function AchievementCard({
           {achievement.title}
         </h3>
         {achievement.content && (
-          <p className="mt-1 text-sm whitespace-pre-wrap text-ink/80">{achievement.content}</p>
+          <p className="mt-1 break-words text-sm whitespace-pre-wrap text-ink/80">{achievement.content}</p>
         )}
 
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -235,7 +236,7 @@ function AchievementCard({
           size="icon-xs"
           variant="secondary"
           onClick={onEdit}
-          aria-label={`编辑成就：${achievement.title}`}
+          aria-label={`编辑经验总结：${achievement.title}`}
         >
           <Pencil />
         </Button>
@@ -243,7 +244,7 @@ function AchievementCard({
           size="icon-xs"
           variant="secondary"
           onClick={onDelete}
-          aria-label={`删除成就：${achievement.title}`}
+          aria-label={`删除经验总结：${achievement.title}`}
         >
           <X />
         </Button>
@@ -268,13 +269,13 @@ function AchievementDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto text-ink sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg">
-            {isNew ? '新成就' : '编辑成就'}
+            {isNew ? '新增经验总结' : '编辑经验总结'}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            填写成就的标题、图片、描述和标签
+            填写标题，可添加正文、图片和标签。
           </DialogDescription>
         </DialogHeader>
-        {/* 表单单独做成组件：每次打开都会重新创建，里面的输入框就是这条成就当前的内容 */}
+        {/* 每次打开都重新创建表单，填入当前记录的内容 */}
         {editing !== null && (
           <AchievementForm
             achievement={isNew ? undefined : editing}
@@ -302,8 +303,7 @@ function AchievementForm({
   const [tags, setTags] = useState<string[]>(achievement?.tags ?? [])
   const [loadingImages, setLoadingImages] = useState(false) // 图片还在压缩时先别让保存
 
-  // 标题和至少一张图片都有了才能保存
-  const canSubmit = title.trim() !== '' && images.length > 0 && !loadingImages
+  const canSubmit = title.trim() !== '' && !loadingImages
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -331,7 +331,7 @@ function AchievementForm({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="achievement-content">描述</Label>
+        <Label htmlFor="achievement-content">正文</Label>
         <Textarea
           id="achievement-content"
           rows={3}
@@ -342,7 +342,7 @@ function AchievementForm({
 
       <div className="grid gap-1.5">
         <Label>
-          图片
+          图片（选填）
           <span className="font-normal text-ink/40 tabular-nums">
             {images.length} / {MAX_IMAGES}
           </span>
