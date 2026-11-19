@@ -81,8 +81,7 @@ function RetroForm({
         <DialogDescription className="sr-only">填写收获与下次改进</DialogDescription>
       </DialogHeader>
 
-      {/* 把当初的直觉原样摆出来，对照实际结果 */}
-      <HunchList hunches={project.hunches} />
+      <HunchList hunches={project.hunches} showTitle />
 
       <div className="grid gap-1.5">
         <Label htmlFor="retro-learned">收获</Label>

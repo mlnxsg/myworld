@@ -4,7 +4,7 @@ export interface Project {
   id: string
   name: string
   estimatedTotal?: number // 预估总工作量分数，选填；没填时计算按 0 处理
-  hunches?: Hunch[] // 直觉预判，可以有很多条；写下的每一条都不可修改
+  hunches?: Hunch[] // 我的目标，可以追加，写入后不可修改
   x: number // 白板上的位置
   y: number
   z?: number // 层级：存的是最近一次拖动的时间，越大越靠上
@@ -14,7 +14,7 @@ export interface Project {
   retro?: Retro
 }
 
-// 一条直觉预判
+// 一条项目目标
 export interface Hunch {
   content: string
   createdAt: number

@@ -27,7 +27,7 @@ export default function NewProjectDialog({ position, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="font-heading text-lg">新建项目</DialogTitle>
           <DialogDescription className="sr-only">
-            填写项目名称，预估总分和直觉预判可留空
+            填写项目名称，预估总分和我的目标可留空
           </DialogDescription>
         </DialogHeader>
         {/* 表单单独做成一个组件：弹窗每次打开都会重新创建它，输入框自然就清空了 */}
@@ -97,7 +97,7 @@ function NewProjectForm({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="project-hunch">直觉预判</Label>
+        <Label htmlFor="project-hunch">我的目标</Label>
         <Textarea
           id="project-hunch"
           rows={2}

@@ -1,4 +1,4 @@
-// 项目详情里的"直觉预判"部分：可以写很多条，但写下的每一条都不能修改或删除。
+// 项目详情里的「我的目标」：可以追加，写入后不可修改或删除。
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -7,22 +7,25 @@ import { addHunch } from '@/db'
 import { formatDateTime } from '@/lib/format'
 import type { Hunch, Project } from '@/types'
 
-// 已经写下的预判，按时间从早到晚排列。复盘框和归档区也用它。
+// 已写下的目标按时间从早到晚排列。复盘框和归档区也用它。
 // 一条都没有时什么也不显示。
-export function HunchList({ hunches }: { hunches?: Hunch[] }) {
+export function HunchList({ hunches, showTitle = false }: { hunches?: Hunch[]; showTitle?: boolean }) {
   if (!hunches || hunches.length === 0) return null
 
   return (
-    <ul className="grid gap-3">
-      {hunches.map((hunch) => (
-        <li key={hunch.createdAt} className="border-l-2 border-gold pl-3">
-          <p className="font-heading text-sm whitespace-pre-wrap">{hunch.content}</p>
-          <time className="mt-1 block text-xs text-ink/40 tabular-nums">
-            {formatDateTime(hunch.createdAt)}
-          </time>
-        </li>
-      ))}
-    </ul>
+    <>
+      {showTitle && <p className="font-heading text-sm font-semibold">我的目标</p>}
+      <ul className="grid gap-3">
+        {hunches.map((hunch) => (
+          <li key={hunch.createdAt} className="border-l-2 border-gold pl-3">
+            <p className="font-heading text-sm whitespace-pre-wrap">{hunch.content}</p>
+            <time className="mt-1 block text-xs text-ink/40 tabular-nums">
+              {formatDateTime(hunch.createdAt)}
+            </time>
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 
@@ -48,7 +51,7 @@ export default function HunchSection({
 
   return (
     <section className="grid gap-3">
-      <h3 className="font-heading text-base font-semibold">直觉预判</h3>
+      <h3 className="font-heading text-base font-semibold">我的目标</h3>
 
       <HunchList hunches={project.hunches} />
 
@@ -56,7 +59,8 @@ export default function HunchSection({
         <form onSubmit={handleSubmit} className="grid gap-2">
           <Textarea
             rows={2}
-            placeholder={hasHunches ? '追加预判' : '预判'}
+            aria-label="我的目标"
+            placeholder={hasHunches ? '追加目标' : '写下目标'}
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />

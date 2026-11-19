@@ -73,7 +73,7 @@ function ArchivedCard({
         </p>
       </header>
 
-      <HunchList hunches={project.hunches} />
+      <HunchList hunches={project.hunches} showTitle />
 
       {hasRetro ? (
         <dl className="grid gap-2 text-sm">
