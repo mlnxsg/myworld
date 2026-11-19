@@ -41,7 +41,7 @@ export default function Board({ onOpenProject }: Props) {
 
   return (
     <div className="relative h-full">
-      <div className="isolate h-full overflow-auto bg-paper">
+      <div className="board-scroll isolate h-full overflow-auto bg-paper">
         <div
           onDoubleClick={handleDoubleClick}
           className="board-dots relative min-h-full min-w-full"
