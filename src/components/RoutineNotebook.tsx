@@ -32,12 +32,12 @@ export default function RoutineNotebook() {
         aria-expanded={expanded}
         aria-controls={bodyId}
         onClick={() => setExpanded(!expanded)}
-        className="flex shrink-0 items-center justify-between gap-3 bg-folder px-4 py-3 text-left font-heading text-base font-semibold outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
+        className="flex shrink-0 items-center justify-between gap-2 bg-folder px-3 py-2 text-left font-heading text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
       >
         我的日常
         <ChevronDown
           aria-hidden="true"
-          className={`size-4 text-ink/60 transition-transform motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`}
+          className={`size-3 text-ink/60 transition-transform motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -47,38 +47,40 @@ export default function RoutineNotebook() {
         className="min-h-0 overflow-y-auto overscroll-contain border-t border-folder-edge"
       >
         {routines.length === 0 && (
-          <p className="mx-4 border-b border-folder-edge py-4 text-sm text-ink/65">
+          <p className="mx-3 border-b border-folder-edge py-2 text-xs text-ink/65">
             写下现在的日常，或理想中的安排。
           </p>
         )}
-        <ul className="mx-4 divide-y divide-folder-edge">
+        <ul className="mx-3 divide-y divide-folder-edge">
           {routines.map((routine) => (
-            <li key={routine.id} className="py-3">
+            <li key={routine.id} className="py-1.5">
               {editingId === routine.id ? (
                 <RoutineForm routine={routine} onDone={() => setEditingId(null)} />
               ) : (
                 <>
-                  <p className="text-sm wrap-break-word whitespace-pre-wrap">
+                  <p className="text-xs wrap-break-word whitespace-pre-wrap">
                     {routine.content}
                   </p>
-                  <div className="mt-1 flex justify-end gap-1">
+                  <div className="flex justify-end gap-0.5">
                     <Button
                       type="button"
                       size="icon-xs"
+                      className="size-4.5 p-0"
                       variant="ghost"
                       aria-label="编辑这条日常"
                       onClick={() => setEditingId(routine.id)}
                     >
-                      <Pencil />
+                      <Pencil className="size-2.5" />
                     </Button>
                     <Button
                       type="button"
                       size="icon-xs"
+                      className="size-4.5 p-0"
                       variant="ghost"
                       aria-label="删除这条日常"
                       onClick={() => setDeletingId(routine.id)}
                     >
-                      <X />
+                      <X className="size-2.5" />
                     </Button>
                   </div>
                 </>
@@ -86,7 +88,7 @@ export default function RoutineNotebook() {
             </li>
           ))}
         </ul>
-        <div className={`mx-4 py-3 ${routines.length > 0 ? 'border-t border-folder-edge' : ''}`}>
+        <div className={`mx-3 py-2 ${routines.length > 0 ? 'border-t border-folder-edge' : ''}`}>
           <RoutineForm />
         </div>
       </div>
@@ -139,9 +141,10 @@ function RoutineForm({ routine, onDone }: { routine?: Routine; onDone?: () => vo
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2">
+    <form onSubmit={handleSubmit} className="grid gap-1">
       <Textarea
         rows={2}
+        className="min-h-10 px-2 py-1 text-xs md:text-xs"
         autoFocus={Boolean(routine)}
         aria-label={routine ? '编辑日常' : '新增日常'}
         placeholder="写一条日常"
@@ -152,12 +155,12 @@ function RoutineForm({ routine, onDone }: { routine?: Routine; onDone?: () => vo
       {error && <p role="alert" className="text-xs text-destructive">保存失败，请重试。</p>}
       <div className="flex justify-end gap-1">
         {routine && (
-          <Button type="button" size="sm" variant="ghost" disabled={saving} onClick={onDone}>
+          <Button type="button" size="xs" variant="ghost" className="h-5" disabled={saving} onClick={onDone}>
             取消
           </Button>
         )}
-        <Button type="submit" size="sm" variant="outline" disabled={saving || !content.trim()}>
-          {!routine && <Plus aria-hidden="true" />}
+        <Button type="submit" size="xs" variant="outline" className="h-5" disabled={saving || !content.trim()}>
+          {!routine && <Plus className="size-2.5" aria-hidden="true" />}
           {routine ? '保存' : '添加'}
         </Button>
       </div>
