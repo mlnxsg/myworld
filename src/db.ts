@@ -58,6 +58,11 @@ db.version(5).stores({
   references: 'id, projectId',
 })
 
+// 已有的目标与提醒也需要 ID，避免按时间或列表位置编辑到别的记录。
+db.version(6).upgrade((tx) =>
+  tx.table('projects').toCollection().modify((project) => assignHunchIds(project)),
+)
+
 // 把旧格式的成就改成新格式：image（一张）→ images（列表）。已经是新格式的不受影响。
 // 数据库升级和导入旧备份文件时都会用到。
 function upgradeAchievement(achievement: Achievement & { image?: string }): void {
@@ -69,10 +74,18 @@ function upgradeAchievement(achievement: Achievement & { image?: string }): void
 
 // 把旧格式的项目改成新格式：hunch（一条）→ hunches（列表）。已经是新格式的不受影响。
 // 数据库升级和导入旧备份文件时都会用到。
-function upgradeProject(project: Project & { hunch?: Hunch }): void {
+type LegacyHunch = Omit<Hunch, 'id'> & { id?: string }
+
+function upgradeProject(project: { hunch?: LegacyHunch; hunches?: LegacyHunch[] }): void {
   if (project.hunch) {
     project.hunches = [project.hunch]
     delete project.hunch
+  }
+}
+
+function assignHunchIds(project: { hunches?: LegacyHunch[] }): void {
+  for (const hunch of project.hunches ?? []) {
+    hunch.id ??= newId()
   }
 }
 
@@ -176,7 +189,7 @@ export async function createProject(input: {
     id: newId(),
     name: input.name,
     estimatedTotal: input.estimatedTotal,
-    hunches: input.hunch ? [{ content: input.hunch, createdAt: now }] : [],
+    hunches: input.hunch ? [{ id: newId(), content: input.hunch, createdAt: now }] : [],
     x: input.x,
     y: input.y,
     z: now,
@@ -194,12 +207,25 @@ export async function setEstimatedTotal(id: string, estimatedTotal?: number): Pr
   await db.projects.update(id, { estimatedTotal })
 }
 
-// 目标与提醒只能往后追加，没有修改和删除的函数
-export async function addHunch(id: string, content: string): Promise<void> {
-  const project = await db.projects.get(id)
-  if (!project) return
-  const hunches = [...(project.hunches ?? []), { content, createdAt: Date.now() }]
-  await db.projects.update(id, { hunches })
+// 在同一个事务里读取并修改列表，避免标签页之间互相覆盖。
+export async function addHunch(projectId: string, content: string): Promise<void> {
+  const hunch = { id: newId(), content, createdAt: Date.now() }
+  await db.projects.where('id').equals(projectId).modify((project) => {
+    project.hunches = [...(project.hunches ?? []), hunch]
+  })
+}
+
+export async function updateHunch(projectId: string, hunchId: string, content: string): Promise<void> {
+  await db.projects.where('id').equals(projectId).modify((project) => {
+    const hunch = project.hunches?.find((entry) => entry.id === hunchId)
+    if (hunch) hunch.content = content
+  })
+}
+
+export async function deleteHunch(projectId: string, hunchId: string): Promise<void> {
+  await db.projects.where('id').equals(projectId).modify((project) => {
+    project.hunches = project.hunches?.filter((entry) => entry.id !== hunchId)
+  })
 }
 
 export async function moveProject(id: string, x: number, y: number): Promise<void> {
@@ -340,7 +366,7 @@ export async function deleteAchievement(id: string): Promise<void> {
 export async function exportAll(): Promise<BackupFile> {
   return {
     app: 'myworld',
-    version: 6,
+    version: 7,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
@@ -356,7 +382,7 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      [1, 2, 3, 4, 5, 6].includes(data.version) &&
+      [1, 2, 3, 4, 5, 6, 7].includes(data.version) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes)
@@ -364,10 +390,11 @@ export function parseBackup(json: string): BackupFile | null {
 
     // 旧版本的备份也能导入：先转换成现在的格式
     data.projects.forEach(upgradeProject)
+    data.projects.forEach(assignHunchIds)
     if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
     data.achievements.forEach(upgradeAchievement)
     if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有 Ref 库
-    data.version = 6
+    data.version = 7
     return data as BackupFile
   } catch {
     return null

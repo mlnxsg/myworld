@@ -4,7 +4,7 @@ export interface Project {
   id: string
   name: string
   estimatedTotal?: number // 预估总工作量分数，选填；没填时计算按 0 处理
-  hunches?: Hunch[] // 目标与提醒，可以追加，写入后不可修改
+  hunches?: Hunch[] // 目标与提醒
   x: number // 白板上的位置
   y: number
   z?: number // 层级：存的是最近一次拖动的时间，越大越靠上
@@ -16,6 +16,7 @@ export interface Project {
 
 // 一条目标或提醒
 export interface Hunch {
+  id: string
   content: string
   createdAt: number
 }
@@ -75,7 +76,8 @@ export interface BackupFile {
   // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements；
   // 版本 4：成就的 image（一张）改成 images（多张）；版本 5：新增 references（Ref 库）
   // 版本 6：Ref 可以没有项目归属，并记录查看状态
-  version: 6
+  // 版本 7：目标与提醒增加独立 ID，方便编辑和删除
+  version: 7
   exportedAt: number
   projects: Project[]
   tasks: Task[]

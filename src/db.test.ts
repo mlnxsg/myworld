@@ -51,7 +51,7 @@ test('打开旧数据库时，hunch 自动变成 hunches，内容不丢', async 
   const backup = await exportAll()
 
   expect(backup.projects).toHaveLength(1)
-  expect(backup.projects[0].hunches).toEqual([oldHunch])
+  expect(backup.projects[0].hunches).toEqual([{ ...oldHunch, id: expect.any(String) }])
   expect('hunch' in backup.projects[0]).toBe(false)
 })
 
@@ -61,7 +61,7 @@ test('追加预判：新的排在后面，旧的原样保留', async () => {
 
   const hunches = (await exportAll()).projects[0].hunches!
   expect(hunches).toHaveLength(2)
-  expect(hunches[0]).toEqual(oldHunch)
+  expect(hunches[0]).toEqual({ ...oldHunch, id: expect.any(String) })
   expect(hunches[1].content).toBe('第二条')
 })
 
@@ -77,10 +77,10 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   })
 
   const backup = parseBackup(oldFile)
-  expect(backup?.version).toBe(6)
+  expect(backup?.version).toBe(7)
   expect(backup?.references).toEqual([]) // 旧备份里没有 Ref，补一个空列表
   expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
-  expect(backup?.projects[0].hunches).toEqual([oldHunch])
+  expect(backup?.projects[0].hunches).toEqual([{ ...oldHunch, id: expect.any(String) }])
 })
 
 test('成就：新增后能导出，导入后原样回来，删除后消失', async () => {
@@ -136,7 +136,7 @@ test('版本 3 的备份里，成就的一张图（image）导入时变成 image
   })
 
   const backup = parseBackup(v3File)!
-  expect(backup.version).toBe(6)
+  expect(backup.version).toBe(7)
   expect(backup.achievements[0].images).toEqual(['data:image/jpeg;base64,AAAA'])
   expect('image' in backup.achievements[0]).toBe(false)
   expect(backup.achievements[1].images).toEqual([])
@@ -221,7 +221,7 @@ test('Ref 库：支持标记旧 Ref，独立 Ref 和查看状态会随备份恢�
 test('只存了无项目归属的 Ref 时也会自动备份', async () => {
   const { addReference, autoBackup, exportAll, importAll } = await import('./db')
   await importAll({
-    app: 'myworld', version: 6, exportedAt: 1,
+    app: 'myworld', version: 7, exportedAt: 1,
     projects: [], tasks: [], notes: [], achievements: [], references: [],
   })
   await addReference(null, { text: '只备份这条 Ref', images: [] })
@@ -233,4 +233,38 @@ test('只存了无项目归属的 Ref 时也会自动备份', async () => {
   } finally {
     fetch.mockRestore()
   }
+})
+
+test('目标与提醒：能独立编辑和删除时间相同的旧记录，并保留其他改动', async () => {
+  const { addHunch, deleteHunch, exportAll, importAll, parseBackup, updateHunch } = await import('./db')
+  const backup = parseBackup(JSON.stringify({
+    app: 'myworld',
+    version: 6,
+    exportedAt: 1,
+    projects: [{
+      id: 'goals', name: '目标与提醒', x: 0, y: 0, status: 'active', createdAt: 1,
+      hunches: [
+        { content: '第一条', createdAt: 2 },
+        { content: '第二条', createdAt: 2 },
+      ],
+    }],
+    tasks: [],
+    notes: [],
+  }))!
+  const [first, second] = backup.projects[0].hunches!
+  expect(first.id).not.toBe(second.id)
+  await importAll(backup)
+
+  await Promise.all([
+    updateHunch('goals', first.id, '编辑后的第一条'),
+    deleteHunch('goals', second.id),
+    addHunch('goals', '后来添加'),
+  ])
+
+  const exported = await exportAll()
+  expect(exported.projects[0].hunches).toEqual([
+    { ...first, content: '编辑后的第一条' },
+    { id: expect.any(String), content: '后来添加', createdAt: expect.any(Number) },
+  ])
+  expect(parseBackup(JSON.stringify(exported))?.projects).toEqual(exported.projects)
 })
