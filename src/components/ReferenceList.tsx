@@ -6,7 +6,7 @@ import { Pencil, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { addReference, deleteReference, updateReference, useReferences } from '@/db'
+import { addReference, deleteReference, markReferenceViewed, updateReference, useReferences } from '@/db'
 import { formatDateTime } from '@/lib/format'
 import type { Reference } from '@/types'
 import ImagePicker from './ImagePicker'
@@ -24,8 +24,6 @@ export default function ReferenceList({ projectId, readOnly }: Props) {
   const references = useReferences(projectId) // 最新的在最上面
   // 正在编辑哪一条（一次只能编辑一条）；null 表示没有在编辑
   const [editingId, setEditingId] = useState<string | null>(null)
-  // 正在看大图：哪几张、从第几张开始
-  const [viewing, setViewing] = useState<{ images: string[]; index: number } | null>(null)
 
   return (
     <section>
@@ -51,37 +49,29 @@ export default function ReferenceList({ projectId, readOnly }: Props) {
               <ReferenceCard
                 key={reference.id}
                 reference={reference}
-                readOnly={readOnly}
-                onView={(index) => setViewing({ images: reference.images, index })}
-                onEdit={() => setEditingId(reference.id)}
+                onEdit={readOnly ? undefined : () => setEditingId(reference.id)}
               />
             ),
           )}
         </ul>
       )}
-
-      <Lightbox
-        images={viewing?.images ?? null}
-        startIndex={viewing?.index}
-        title="Ref"
-        onClose={() => setViewing(null)}
-      />
     </section>
   )
 }
 
 // 平时显示的一条 Ref
-function ReferenceCard({
+export function ReferenceCard({
   reference,
-  readOnly,
-  onView,
   onEdit,
+  source,
 }: {
   reference: Reference
-  readOnly: boolean
-  onView: (index: number) => void
-  onEdit: () => void
+  onEdit?: () => void
+  source?: React.ReactNode
 }) {
+  const [viewingIndex, setViewingIndex] = useState<number | null>(null)
+  const viewed = reference.viewed === true
+
   return (
     <li className="group grid gap-2 rounded-lg border border-ink/10 bg-white/70 p-2.5">
       {reference.images.length > 0 && (
@@ -91,7 +81,7 @@ function ReferenceCard({
             <button
               key={index}
               type="button"
-              onClick={() => onView(index)}
+              onClick={() => setViewingIndex(index)}
               aria-label={`看大图：第 ${index + 1} 张`}
               className="aspect-square cursor-zoom-in overflow-hidden rounded bg-ink/5"
             >
@@ -107,9 +97,20 @@ function ReferenceCard({
         </p>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <time className="text-xs text-ink/40 tabular-nums">{formatDateTime(reference.createdAt)}</time>
-        {!readOnly && (
+        {source}
+        <Button
+          type="button"
+          size="xs"
+          variant={viewed ? 'ghost' : 'outline'}
+          className="ml-auto"
+          disabled={viewed}
+          onClick={() => markReferenceViewed(reference.id)}
+        >
+          {viewed ? '已查看' : '标为已查看'}
+        </Button>
+        {onEdit && (
           // 编辑和删除按钮平时是淡的，鼠标移到这条上才明显
           <div className="flex opacity-30 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
             <Button size="icon-xs" variant="ghost" onClick={onEdit} aria-label="编辑这条 Ref">
@@ -126,19 +127,25 @@ function ReferenceCard({
           </div>
         )}
       </div>
+      <Lightbox
+        images={viewingIndex === null ? null : reference.images}
+        startIndex={viewingIndex ?? undefined}
+        title="Ref"
+        onClose={() => setViewingIndex(null)}
+      />
     </li>
   )
 }
 
 // 新增和编辑共用的输入区：一段文字 + 图片。
 // 传了 reference 就是编辑它；没传就是新增。
-function ReferenceForm({
+export function ReferenceForm({
   projectId,
   reference,
   onDone,
   pasteEnabled = true,
 }: {
-  projectId: string
+  projectId: string | null
   reference?: Reference
   onDone?: () => void // 编辑时：保存或取消之后要做的事（比如回到平时的样子）
   pasteEnabled?: boolean

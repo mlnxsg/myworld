@@ -4,7 +4,7 @@
 // 测试是在 Node 里跑的，没有浏览器，所以用 fake-indexeddb 假装一个 IndexedDB。
 
 import 'fake-indexeddb/auto'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 // Node 里也没有 localStorage（导入成功后会用它记"上次备份时间"），造一个最简单的假的。
 const fakeStorage = new Map<string, string>()
@@ -77,7 +77,7 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   })
 
   const backup = parseBackup(oldFile)
-  expect(backup?.version).toBe(5)
+  expect(backup?.version).toBe(6)
   expect(backup?.references).toEqual([]) // 旧备份里没有 Ref，补一个空列表
   expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
   expect(backup?.projects[0].hunches).toEqual([oldHunch])
@@ -136,7 +136,7 @@ test('版本 3 的备份里，成就的一张图（image）导入时变成 image
   })
 
   const backup = parseBackup(v3File)!
-  expect(backup.version).toBe(5)
+  expect(backup.version).toBe(6)
   expect(backup.achievements[0].images).toEqual(['data:image/jpeg;base64,AAAA'])
   expect('image' in backup.achievements[0]).toBe(false)
   expect(backup.achievements[1].images).toEqual([])
@@ -191,4 +191,46 @@ test('Ref 库：编辑时可以删掉一张图、改文字，记录时间不变'
   expect(after.text).toBeUndefined()
   expect(after.createdAt).toBe(before.createdAt)
   expect(after.projectId).toBe(project.id)
+})
+
+test('Ref 库：支持标记旧 Ref，独立 Ref 和查看状态会随备份恢复', async () => {
+  const { addReference, deleteProject, exportAll, importAll, markReferenceViewed, parseBackup } =
+    await import('./db')
+  const backup = await exportAll()
+  const project = backup.projects[0]
+  const oldRef = { id: 'old-ref', projectId: project.id, text: '旧 Ref', images: [], createdAt: 1 }
+  await importAll(parseBackup(JSON.stringify({ ...backup, version: 5, references: [oldRef] }))!)
+  expect((await exportAll()).references[0].viewed).toBeUndefined()
+  await markReferenceViewed(oldRef.id)
+
+  await addReference(null, { text: '无项目归属的 Ref', images: [] })
+  const standalone = (await exportAll()).references.find((ref) => ref.projectId === null)!
+  expect(standalone.viewed).toBe(false)
+  await markReferenceViewed(standalone.id)
+
+  const exported = await exportAll()
+  await importAll(parseBackup(JSON.stringify(exported))!)
+  expect((await exportAll()).references).toEqual(
+    expect.arrayContaining([{ ...oldRef, viewed: true }, { ...standalone, viewed: true }]),
+  )
+
+  await deleteProject(project.id)
+  expect((await exportAll()).references).toEqual([{ ...standalone, viewed: true }])
+})
+
+test('只存了无项目归属的 Ref 时也会自动备份', async () => {
+  const { addReference, autoBackup, exportAll, importAll } = await import('./db')
+  await importAll({
+    app: 'myworld', version: 6, exportedAt: 1,
+    projects: [], tasks: [], notes: [], achievements: [], references: [],
+  })
+  await addReference(null, { text: '只备份这条 Ref', images: [] })
+  const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
+  try {
+    expect(await autoBackup()).toBe(true)
+    const [, request] = fetch.mock.calls[0]
+    expect(JSON.parse(String(request?.body)).references).toEqual((await exportAll()).references)
+  } finally {
+    fetch.mockRestore()
+  }
 })

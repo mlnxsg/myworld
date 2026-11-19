@@ -5,10 +5,11 @@ import Board from './components/Board'
 import DataButtons from './components/DataButtons'
 import NotesView from './components/NotesView'
 import ProjectDetail from './components/ProjectDetail'
+import ReferencesView from './components/ReferencesView'
 import StatusBar from './components/StatusBar'
 import { autoBackup } from './db'
 
-type View = 'board' | 'archive' | 'notes' | 'achievements'
+type View = 'board' | 'archive' | 'notes' | 'references' | 'achievements'
 
 // 每隔多久自动备份一次
 const BACKUP_EVERY = 10 * 60 * 1000 // 10 分钟
@@ -28,10 +29,10 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col text-ink">
-      <header className="flex items-center gap-6 border-b px-5 py-3">
+      <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b px-5 py-3">
         <h1 className="font-heading text-xl font-bold">我的世界</h1>
 
-        <nav className="flex gap-4 text-sm">
+        <nav className="order-last flex basis-full flex-wrap gap-x-4 gap-y-2 text-sm sm:order-none sm:basis-auto">
           <NavButton active={view === 'board'} onClick={() => setView('board')}>
             白板
           </NavButton>
@@ -40,6 +41,9 @@ export default function App() {
           </NavButton>
           <NavButton active={view === 'notes'} onClick={() => setView('notes')}>
             碎碎念
+          </NavButton>
+          <NavButton active={view === 'references'} onClick={() => setView('references')}>
+            Ref 库
           </NavButton>
           <NavButton active={view === 'achievements'} onClick={() => setView('achievements')}>
             成就
@@ -55,6 +59,9 @@ export default function App() {
         {view === 'board' && <Board onOpenProject={setOpenProjectId} />}
         {view === 'archive' && <ArchiveView onOpenProject={setOpenProjectId} />}
         {view === 'notes' && <NotesView onOpenProject={setOpenProjectId} />}
+        {view === 'references' && (
+          <ReferencesView onOpenProject={setOpenProjectId} projectDetailOpen={openProjectId !== null} />
+        )}
         {view === 'achievements' && <AchievementsView />}
       </main>
 

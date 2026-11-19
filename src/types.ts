@@ -58,12 +58,13 @@ export interface Achievement {
   createdAt: number
 }
 
-// Ref：项目里存下来的参考资料，文字和图片至少有一样
+// Ref：存下来的参考资料，文字和图片至少有一样
 export interface Reference {
   id: string
-  projectId: string
+  projectId: string | null // null 表示没有项目归属
   text?: string // 文字或链接
   images: string[] // 压缩后的 data URL，可以没有
+  viewed?: boolean // 旧记录没有此字段，视为未查看
   createdAt: number
 }
 
@@ -73,7 +74,8 @@ export interface BackupFile {
   // 数据结构变了就加 1。
   // 版本 1：每个项目只有一条 hunch；版本 2：改成 hunches 列表；版本 3：新增 achievements；
   // 版本 4：成就的 image（一张）改成 images（多张）；版本 5：新增 references（Ref 库）
-  version: 5
+  // 版本 6：Ref 可以没有项目归属，并记录查看状态
+  version: 6
   exportedAt: number
   projects: Project[]
   tasks: Task[]

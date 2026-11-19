@@ -121,6 +121,15 @@ export function useReferences(projectId: string): Reference[] {
   )
 }
 
+export function useAllReferences(): Reference[] {
+  return (
+    useLiveQuery(async () => {
+      const references = await db.references.toArray()
+      return references.sort((a, b) => b.createdAt - a.createdAt)
+    }) ?? []
+  )
+}
+
 export function useNotes(projectId: string): Note[] {
   return (
     useLiveQuery(
@@ -226,7 +235,7 @@ export async function deleteProject(id: string): Promise<void> {
 
 // 文字和图片至少要有一样（由界面保证）
 export async function addReference(
-  projectId: string,
+  projectId: string | null,
   input: { text?: string; images: string[] },
 ): Promise<void> {
   await db.references.add({
@@ -234,6 +243,7 @@ export async function addReference(
     projectId,
     text: input.text,
     images: input.images,
+    viewed: false,
     createdAt: Date.now(),
   })
 }
@@ -248,6 +258,10 @@ export async function updateReference(
 
 export async function deleteReference(id: string): Promise<void> {
   await db.references.delete(id)
+}
+
+export async function markReferenceViewed(id: string): Promise<void> {
+  await db.references.update(id, { viewed: true })
 }
 
 // ---------- 待办事项 ----------
@@ -326,7 +340,7 @@ export async function deleteAchievement(id: string): Promise<void> {
 export async function exportAll(): Promise<BackupFile> {
   return {
     app: 'myworld',
-    version: 5,
+    version: 6,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
@@ -342,7 +356,7 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      [1, 2, 3, 4, 5].includes(data.version) &&
+      [1, 2, 3, 4, 5, 6].includes(data.version) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes)
@@ -353,7 +367,7 @@ export function parseBackup(json: string): BackupFile | null {
     if (!Array.isArray(data.achievements)) data.achievements = [] // 版本 3 之前没有成就
     data.achievements.forEach(upgradeAchievement)
     if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有 Ref 库
-    data.version = 5
+    data.version = 6
     return data as BackupFile
   } catch {
     return null
@@ -384,7 +398,10 @@ export async function autoBackup(): Promise<boolean> {
 
   // 数据是空的就不备份。万一哪天浏览器数据丢了，不能让一份空白盖掉当天的好备份。
   const isEmpty =
-    backup.projects.length === 0 && backup.notes.length === 0 && backup.achievements.length === 0
+    backup.projects.length === 0 &&
+    backup.notes.length === 0 &&
+    backup.achievements.length === 0 &&
+    backup.references.length === 0
   if (isEmpty) return false
 
   try {
