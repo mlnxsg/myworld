@@ -34,7 +34,7 @@ export default function App() {
 
         <nav className="order-last flex basis-full flex-wrap gap-x-4 gap-y-2 text-sm sm:order-none sm:basis-auto">
           <NavButton active={view === 'board'} onClick={() => setView('board')}>
-            白板
+            做事
           </NavButton>
           <NavButton active={view === 'archive'} onClick={() => setView('archive')}>
             归档区
