@@ -39,6 +39,16 @@ export interface Task {
   dueDate?: string // 第一版不用，为以后的待办提示区预留
 }
 
+// todo 页里的独立待办，转入项目后才有工作量分数。
+export interface Todo {
+  id: string
+  title: string
+  tags: string[]
+  done: boolean
+  createdAt: number
+  doneAt?: number
+}
+
 // 碎碎念
 export interface Note {
   id: string
@@ -85,7 +95,8 @@ export interface BackupFile {
   // 版本 6：Ref 可以没有项目归属，并记录查看状态
   // 版本 7：目标与提醒增加独立 ID，方便编辑和删除
   // 版本 8：新增 routines（我的日常）
-  version: 8
+  // 版本 9：新增 todos（独立待办）
+  version: 9
   exportedAt: number
   projects: Project[]
   tasks: Task[]
@@ -93,4 +104,5 @@ export interface BackupFile {
   achievements: Achievement[]
   references: Reference[]
   routines: Routine[]
+  todos: Todo[]
 }

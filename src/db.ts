@@ -15,6 +15,7 @@ import type {
   Routine,
   Score,
   Task,
+  Todo,
 } from './types'
 
 const db = new Dexie('myworld') as Dexie & {
@@ -24,6 +25,7 @@ const db = new Dexie('myworld') as Dexie & {
   achievements: EntityTable<Achievement, 'id'>
   references: EntityTable<Reference, 'id'>
   routines: EntityTable<Routine, 'id'>
+  todos: EntityTable<Todo, 'id'>
 }
 
 // 这里只需要列出"用来查询"的字段（索引），其他字段会自动保存。
@@ -67,6 +69,10 @@ db.version(6).upgrade((tx) =>
 
 db.version(7).stores({
   routines: 'id, createdAt',
+})
+
+db.version(8).stores({
+  todos: 'id, createdAt',
 })
 
 // 把旧格式的成就改成新格式：image（一张）→ images（列表）。已经是新格式的不受影响。
@@ -321,6 +327,49 @@ export async function deleteTask(id: string): Promise<void> {
   await db.tasks.delete(id)
 }
 
+// ---------- 独立待办 ----------
+
+export function useTodos(): Todo[] {
+  return useLiveQuery(() => db.todos.orderBy('createdAt').reverse().toArray()) ?? []
+}
+
+export async function addTodo(title: string, tags: string[]): Promise<void> {
+  await db.todos.add({ id: newId(), title, tags, done: false, createdAt: Date.now() })
+}
+
+export async function updateTodo(id: string, title: string, tags: string[]): Promise<void> {
+  await db.todos.update(id, { title, tags })
+}
+
+export async function setTodoDone(id: string, done: boolean): Promise<void> {
+  await db.todos.update(id, { done, doneAt: done ? Date.now() : undefined })
+}
+
+export async function deleteTodo(id: string): Promise<void> {
+  await db.todos.delete(id)
+}
+
+export async function moveTodoToProject(id: string, projectId: string, score: Score): Promise<string> {
+  return db.transaction('rw', db.todos, db.projects, db.tasks, async () => {
+    const todo = await db.todos.get(id)
+    if (!todo) throw new Error('这条待办已不存在。')
+    const project = await db.projects.get(projectId)
+    if (project?.status !== 'active') throw new Error('这个项目已归档或删除，请重新选择。')
+
+    await db.tasks.add({
+      id: newId(),
+      projectId,
+      title: todo.title,
+      score,
+      done: todo.done,
+      doneAt: todo.doneAt,
+      createdAt: todo.createdAt,
+    })
+    await db.todos.delete(id)
+    return project.name
+  })
+}
+
 // ---------- 碎碎念 ----------
 
 // projectId 传 null 表示"随手记"：不属于任何项目的碎碎念
@@ -388,9 +437,9 @@ export async function deleteRoutine(id: string): Promise<void> {
 // ---------- 导出 / 导入 ----------
 
 export async function exportAll(): Promise<BackupFile> {
-  return {
+  return db.transaction('r', db.tables, async () => ({
     app: 'myworld',
-    version: 8,
+    version: 9,
     exportedAt: Date.now(),
     projects: await db.projects.toArray(),
     tasks: await db.tasks.toArray(),
@@ -398,7 +447,8 @@ export async function exportAll(): Promise<BackupFile> {
     achievements: await db.achievements.toArray(),
     references: await db.references.toArray(),
     routines: await db.routines.toArray(),
-  }
+    todos: await db.todos.toArray(),
+  }))
 }
 
 // 检查一个 JSON 是不是我们导出的备份文件。不是的话返回 null。
@@ -407,11 +457,12 @@ export function parseBackup(json: string): BackupFile | null {
     const data = JSON.parse(json)
     const looksRight =
       data?.app === 'myworld' &&
-      [1, 2, 3, 4, 5, 6, 7, 8].includes(data.version) &&
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].includes(data.version) &&
       Array.isArray(data.projects) &&
       Array.isArray(data.tasks) &&
       Array.isArray(data.notes) &&
-      (data.version < 8 || Array.isArray(data.routines))
+      (data.version < 8 || Array.isArray(data.routines)) &&
+      (data.version < 9 || Array.isArray(data.todos))
     if (!looksRight) return null
 
     // 旧版本的备份也能导入：先转换成现在的格式
@@ -421,7 +472,8 @@ export function parseBackup(json: string): BackupFile | null {
     data.achievements.forEach(upgradeAchievement)
     if (!Array.isArray(data.references)) data.references = [] // 版本 5 之前没有 Ref 库
     if (!Array.isArray(data.routines)) data.routines = [] // 版本 8 之前没有「我的日常」
-    data.version = 8
+    if (!Array.isArray(data.todos)) data.todos = [] // 版本 9 之前没有独立待办
+    data.version = 9
     return data as BackupFile
   } catch {
     return null
@@ -430,7 +482,7 @@ export function parseBackup(json: string): BackupFile | null {
 
 // 导入会覆盖现有的全部数据
 export async function importAll(backup: BackupFile): Promise<void> {
-  const tables = [db.projects, db.tasks, db.notes, db.achievements, db.references, db.routines]
+  const tables = [db.projects, db.tasks, db.notes, db.achievements, db.references, db.routines, db.todos]
   await db.transaction('rw', tables, async () => {
     for (const table of tables) await table.clear()
     await db.projects.bulkAdd(backup.projects)
@@ -439,6 +491,7 @@ export async function importAll(backup: BackupFile): Promise<void> {
     await db.achievements.bulkAdd(backup.achievements)
     await db.references.bulkAdd(backup.references)
     await db.routines.bulkAdd(backup.routines)
+    await db.todos.bulkAdd(backup.todos)
   })
   // 刚导入完，现在的数据和手里那份备份文件一模一样，所以也算"刚备份过"
   markBackedUp()
@@ -457,7 +510,8 @@ export async function autoBackup(): Promise<boolean> {
     backup.notes.length === 0 &&
     backup.achievements.length === 0 &&
     backup.references.length === 0 &&
-    backup.routines.length === 0
+    backup.routines.length === 0 &&
+    backup.todos.length === 0
   if (isEmpty) return false
 
   try {

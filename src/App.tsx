@@ -7,9 +7,10 @@ import NotesView from './components/NotesView'
 import ProjectDetail from './components/ProjectDetail'
 import ReferencesView from './components/ReferencesView'
 import StatusBar from './components/StatusBar'
+import TodoView from './components/TodoView'
 import { autoBackup } from './db'
 
-type View = 'board' | 'archive' | 'notes' | 'references' | 'achievements'
+type View = 'board' | 'todo' | 'archive' | 'notes' | 'references' | 'achievements'
 
 // 每隔多久自动备份一次
 const BACKUP_EVERY = 10 * 60 * 1000 // 10 分钟
@@ -36,6 +37,9 @@ export default function App() {
           <NavButton active={view === 'board'} onClick={() => setView('board')}>
             做事
           </NavButton>
+          <NavButton active={view === 'todo'} onClick={() => setView('todo')}>
+            todo
+          </NavButton>
           <NavButton active={view === 'archive'} onClick={() => setView('archive')}>
             归档区
           </NavButton>
@@ -57,6 +61,7 @@ export default function App() {
 
       <main className="min-h-0 flex-1">
         {view === 'board' && <Board onOpenProject={setOpenProjectId} />}
+        {view === 'todo' && <TodoView />}
         {view === 'archive' && <ArchiveView onOpenProject={setOpenProjectId} />}
         {view === 'notes' && <NotesView onOpenProject={setOpenProjectId} />}
         {view === 'references' && (

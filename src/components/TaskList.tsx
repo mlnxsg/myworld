@@ -7,8 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { addTask, deleteTask, setTaskDone, updateTask } from '@/db'
 import type { Score, Task } from '@/types'
-
-const SCORES: Score[] = [1, 2, 3, 4, 5]
+import ScorePicker from './ScorePicker'
 
 interface Props {
   projectId: string
@@ -33,36 +32,6 @@ export default function TaskList({ projectId, tasks, readOnly }: Props) {
         </ul>
       )}
     </section>
-  )
-}
-
-// 选工作量分数的五个小圆按钮
-function ScorePicker({
-  value,
-  onChange,
-}: {
-  value: Score | null
-  onChange: (score: Score) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {SCORES.map((score) => (
-        <button
-          key={score}
-          type="button"
-          onClick={() => onChange(score)}
-          aria-label={`${score} 分`}
-          aria-pressed={value === score}
-          className={`size-6 rounded-full border text-xs transition-colors ${
-            value === score
-              ? 'border-gold bg-gold text-white'
-              : 'border-ink/15 text-ink/60 hover:border-gold hover:text-gold'
-          }`}
-        >
-          {score}
-        </button>
-      ))}
-    </div>
   )
 }
 

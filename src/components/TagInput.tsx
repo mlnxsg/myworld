@@ -27,6 +27,8 @@ export default function TagInput({ id, value, onChange, suggestions }: Props) {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return
+
     // 回车、英文逗号、中文逗号都表示"这个标签输完了"
     if (e.key === 'Enter' || e.key === ',' || e.key === '，') {
       e.preventDefault() // 回车不要提交整个表单

@@ -77,7 +77,7 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   })
 
   const backup = parseBackup(oldFile)
-  expect(backup?.version).toBe(8)
+  expect(backup?.version).toBe(9)
   expect(backup?.references).toEqual([]) // 旧备份里没有 Ref，补一个空列表
   expect(backup?.achievements).toEqual([]) // 旧备份里没有成就，补一个空列表
   expect(backup?.projects[0].hunches).toEqual([{ ...oldHunch, id: expect.any(String) }])
@@ -136,7 +136,7 @@ test('版本 3 的备份里，成就的一张图（image）导入时变成 image
   })
 
   const backup = parseBackup(v3File)!
-  expect(backup.version).toBe(8)
+  expect(backup.version).toBe(9)
   expect(backup.achievements[0].images).toEqual(['data:image/jpeg;base64,AAAA'])
   expect('image' in backup.achievements[0]).toBe(false)
   expect(backup.achievements[1].images).toEqual([])
@@ -221,8 +221,8 @@ test('Ref 库：支持标记旧 Ref，独立 Ref 和查看状态会随备份恢�
 test('只存了无项目归属的 Ref 时也会自动备份', async () => {
   const { addReference, autoBackup, exportAll, importAll } = await import('./db')
   await importAll({
-    app: 'myworld', version: 8, exportedAt: 1,
-    projects: [], tasks: [], notes: [], achievements: [], references: [], routines: [],
+    app: 'myworld', version: 9, exportedAt: 1,
+    projects: [], tasks: [], notes: [], achievements: [], references: [], routines: [], todos: [],
   })
   await addReference(null, { text: '只备份这条 Ref', images: [] })
   const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
@@ -299,4 +299,62 @@ test('我的日常：可编辑、删除和备份，旧备份可导入', async ()
   expect((await exportAll()).routines).toEqual(exported.routines)
   await importAll(oldBackup)
   expect((await exportAll()).routines).toEqual([])
+})
+
+test('独立待办可随备份恢复，转入项目后保留完成状态且不会重复转入', async () => {
+  const {
+    addTodo, archiveProject, autoBackup, createProject, exportAll, importAll,
+    moveTodoToProject, parseBackup, setTodoDone, updateTodo,
+  } = await import('./db')
+  const oldBackup = parseBackup(JSON.stringify({
+    app: 'myworld', version: 8, exportedAt: 1,
+    projects: [], tasks: [], notes: [], achievements: [], references: [], routines: [],
+  }))!
+  expect(oldBackup.todos).toEqual([])
+  await importAll(oldBackup)
+  await addTodo('预约取件', ['生活'])
+  const [todo] = (await exportAll()).todos
+  await setTodoDone(todo.id, true)
+  await updateTodo(todo.id, '到驿站取件', ['生活', '外出'])
+  const backup = await exportAll()
+  expect(backup.todos).toEqual([
+    { ...todo, title: '到驿站取件', tags: ['生活', '外出'], done: true, doneAt: expect.any(Number) },
+  ])
+  expect(backup.tasks).toEqual([])
+
+  const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
+  try {
+    expect(await autoBackup()).toBe(true)
+    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body)).todos).toEqual(backup.todos)
+  } finally {
+    fetch.mockRestore()
+  }
+  await importAll(oldBackup)
+  await importAll(parseBackup(JSON.stringify(backup))!)
+  expect((await exportAll()).todos).toEqual(backup.todos)
+
+  await createProject({ name: '进行中', x: 0, y: 0 })
+  await createProject({ name: '已归档', x: 0, y: 0 })
+  const projects = (await exportAll()).projects
+  const active = projects.find((project) => project.name === '进行中')!
+  const archived = projects.find((project) => project.name === '已归档')!
+  await archiveProject(archived.id)
+  await expect(moveTodoToProject(todo.id, archived.id, 3)).rejects.toThrow('已归档或删除')
+  expect((await exportAll()).todos).toEqual(backup.todos)
+  const attempts = await Promise.allSettled([
+    moveTodoToProject(todo.id, active.id, 3),
+    moveTodoToProject(todo.id, active.id, 3),
+  ])
+  expect(attempts.map((attempt) => attempt.status).sort()).toEqual(['fulfilled', 'rejected'])
+  const result = await exportAll()
+  expect(result.todos).toEqual([])
+  expect(result.tasks).toEqual([{
+    id: expect.any(String),
+    title: '到驿站取件',
+    projectId: active.id,
+    score: 3,
+    done: true,
+    createdAt: todo.createdAt,
+    doneAt: backup.todos[0].doneAt,
+  }])
 })
