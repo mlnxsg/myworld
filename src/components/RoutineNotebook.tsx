@@ -57,29 +57,31 @@ export default function RoutineNotebook() {
               {editingId === routine.id ? (
                 <RoutineForm routine={routine} onDone={() => setEditingId(null)} />
               ) : (
-                <div className="flex items-start gap-1">
-                  <p className="min-w-0 flex-1 text-sm wrap-break-word whitespace-pre-wrap">
+                <>
+                  <p className="text-sm wrap-break-word whitespace-pre-wrap">
                     {routine.content}
                   </p>
-                  <Button
-                    type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    aria-label="编辑这条日常"
-                    onClick={() => setEditingId(routine.id)}
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    aria-label="删除这条日常"
-                    onClick={() => setDeletingId(routine.id)}
-                  >
-                    <X />
-                  </Button>
-                </div>
+                  <div className="mt-1 flex justify-end gap-1">
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      aria-label="编辑这条日常"
+                      onClick={() => setEditingId(routine.id)}
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      aria-label="删除这条日常"
+                      onClick={() => setDeletingId(routine.id)}
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                </>
               )}
             </li>
           ))}
