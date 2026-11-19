@@ -194,7 +194,7 @@ export async function setEstimatedTotal(id: string, estimatedTotal?: number): Pr
   await db.projects.update(id, { estimatedTotal })
 }
 
-// 项目目标只能往后追加，没有修改和删除的函数
+// 目标与提醒只能往后追加，没有修改和删除的函数
 export async function addHunch(id: string, content: string): Promise<void> {
   const project = await db.projects.get(id)
   if (!project) return

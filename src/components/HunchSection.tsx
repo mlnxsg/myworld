@@ -1,4 +1,4 @@
-// 项目详情里的「我的目标」：可以追加，写入后不可修改或删除。
+// 项目详情里的「目标与提醒」：可以追加，写入后不可修改或删除。
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -7,14 +7,14 @@ import { addHunch } from '@/db'
 import { formatDateTime } from '@/lib/format'
 import type { Hunch, Project } from '@/types'
 
-// 已写下的目标按时间从早到晚排列。复盘框和归档区也用它。
+// 已写下的目标和提醒按时间从早到晚排列。复盘框和归档区也用它。
 // 一条都没有时什么也不显示。
 export function HunchList({ hunches, showTitle = false }: { hunches?: Hunch[]; showTitle?: boolean }) {
   if (!hunches || hunches.length === 0) return null
 
   return (
     <>
-      {showTitle && <p className="font-heading text-sm font-semibold">我的目标</p>}
+      {showTitle && <p className="font-heading text-sm font-semibold">目标与提醒</p>}
       <ul className="grid gap-3">
         {hunches.map((hunch) => (
           <li key={hunch.createdAt} className="border-l-2 border-gold pl-3">
@@ -51,7 +51,7 @@ export default function HunchSection({
 
   return (
     <section className="grid gap-3">
-      <h3 className="font-heading text-base font-semibold">我的目标</h3>
+      <h3 className="font-heading text-base font-semibold">目标与提醒</h3>
 
       <HunchList hunches={project.hunches} />
 
@@ -59,8 +59,8 @@ export default function HunchSection({
         <form onSubmit={handleSubmit} className="grid gap-2">
           <Textarea
             rows={2}
-            aria-label="我的目标"
-            placeholder={hasHunches ? '追加目标' : '写下目标'}
+            aria-label="目标与提醒"
+            placeholder={hasHunches ? '追加一条' : '写下目标或提醒'}
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
