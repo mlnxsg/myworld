@@ -130,16 +130,13 @@
 }
 /* ---------- 以下是"我的世界"自己的样式（上面是 shadcn 自动生成的） ---------- */
 
-/* 隐藏竖向滚动条，保留原本的滚动行为和横向滚动条。 */
-::-webkit-scrollbar:vertical {
-    width: 0;
+/* 保留滚动行为。纯横向滚动区域（如大图的缩略图栏）保留滚动条。 */
+:not(.overflow-x-auto) {
+    scrollbar-width: none;
 }
 
-@supports not selector(::-webkit-scrollbar) {
-    /* 只能同时隐藏两个方向的浏览器保留横向滚动区域的滚动条。 */
-    :not(.board-scroll, .overflow-x-auto) {
-        scrollbar-width: none;
-    }
+:not(.overflow-x-auto)::-webkit-scrollbar {
+    display: none;
 }
 
 @theme inline {
