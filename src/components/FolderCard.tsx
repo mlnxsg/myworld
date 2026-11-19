@@ -15,14 +15,6 @@ interface Props {
 // 鼠标移动超过这么多像素才算"拖动"，否则算"单击"
 const DRAG_THRESHOLD = 4
 
-// 根据 id 算出一个固定的小角度（-2.5° 到 2.5°），让文件夹摆得随意一点。
-// 同一个文件夹每次算出来都一样，所以刷新后角度不变。
-function tiltOf(id: string): number {
-  let sum = 0
-  for (const char of id) sum += char.charCodeAt(0)
-  return (sum % 51) / 10 - 2.5
-}
-
 export default function FolderCard({ project, tasks, onOpen }: Props) {
   // 拖动过程中的临时位置。fromX / fromY 记的是拖动开始时数据库里的位置。
   const [dragPos, setDragPos] = useState<{
@@ -84,9 +76,9 @@ export default function FolderCard({ project, tasks, onOpen }: Props) {
       className={`absolute w-44 touch-none select-none ${
         dragging
           ? 'z-50 cursor-grabbing drop-shadow-xl'
-          : 'cursor-grab drop-shadow-sm transition-[rotate,filter] duration-200 hover:drop-shadow-md'
+          : 'cursor-grab drop-shadow-sm transition-[filter] duration-200 hover:drop-shadow-md'
       }`}
-      style={{ left: x, top: y, rotate: dragging ? '0deg' : `${tiltOf(project.id)}deg` }}
+      style={{ left: x, top: y }}
     >
       {/* 文件夹上面的小标签 */}
       <div className="h-3.5 w-16 rounded-t-lg border border-b-0 border-folder-edge bg-folder" />
