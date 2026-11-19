@@ -1,5 +1,6 @@
-import { ChevronDown, Pencil, Plus, X } from 'lucide-react'
-import { useId, useState } from 'react'
+import { ChevronDown, Plus } from 'lucide-react'
+import { DropdownMenu } from 'radix-ui'
+import { useId, useRef, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,33 +58,11 @@ export default function RoutineNotebook() {
               {editingId === routine.id ? (
                 <RoutineForm routine={routine} onDone={() => setEditingId(null)} />
               ) : (
-                <>
-                  <p className="text-xs wrap-break-word whitespace-pre-wrap">
-                    {routine.content}
-                  </p>
-                  <div className="flex justify-end gap-0.5">
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      className="size-4.5 p-0"
-                      variant="ghost"
-                      aria-label="编辑这条日常"
-                      onClick={() => setEditingId(routine.id)}
-                    >
-                      <Pencil className="size-2.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      className="size-4.5 p-0"
-                      variant="ghost"
-                      aria-label="删除这条日常"
-                      onClick={() => setDeletingId(routine.id)}
-                    >
-                      <X className="size-2.5" />
-                    </Button>
-                  </div>
-                </>
+                <RoutineEntryMenu
+                  content={routine.content}
+                  onEdit={() => setEditingId(routine.id)}
+                  onDelete={() => setDeletingId(routine.id)}
+                />
               )}
             </li>
           ))}
@@ -111,6 +90,62 @@ export default function RoutineNotebook() {
         </AlertDialogContent>
       </AlertDialog>
     </aside>
+  )
+}
+
+function RoutineEntryMenu({
+  content,
+  onEdit,
+  onDelete,
+}: {
+  content: string
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const actionSelected = useRef(false)
+  const itemClassName = 'cursor-pointer rounded-md px-2.5 py-1 outline-none data-highlighted:bg-folder'
+
+  return (
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger
+        type="button"
+        className="block w-full cursor-pointer rounded text-left text-xs wrap-break-word whitespace-pre-wrap outline-none hover:bg-folder focus-visible:ring-2 focus-visible:ring-gold aria-expanded:bg-folder"
+      >
+        {content}
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={4}
+          collisionPadding={12}
+          className="z-30 grid min-w-20 gap-0.5 rounded-lg border border-folder-edge bg-paper p-1 text-xs shadow-md"
+          onCloseAutoFocus={(event) => {
+            // 编辑框或确认框会接过焦点。
+            if (actionSelected.current) event.preventDefault()
+            actionSelected.current = false
+          }}
+        >
+          <DropdownMenu.Item
+            className={itemClassName}
+            onSelect={() => {
+              actionSelected.current = true
+              onEdit()
+            }}
+          >
+            编辑
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className={`${itemClassName} text-destructive`}
+            onSelect={() => {
+              actionSelected.current = true
+              onDelete()
+            }}
+          >
+            删除
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   )
 }
 
