@@ -1,5 +1,7 @@
-// 顶部右侧的"导出 / 导入"两个按钮。
+// 顶部右侧的备份菜单。
 
+import { ChevronDown } from 'lucide-react'
+import { DropdownMenu } from 'radix-ui'
 import { useRef, useState } from 'react'
 import {
   AlertDialog,
@@ -59,13 +61,35 @@ export default function DataButtons() {
   }
 
   return (
-    <div className="flex gap-1">
-      <Button size="sm" variant="ghost" onClick={handleExport}>
-        导出
-      </Button>
-      <Button size="sm" variant="ghost" onClick={() => fileInput.current?.click()}>
-        导入
-      </Button>
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button type="button" size="sm" variant="ghost">
+            备份
+            <ChevronDown aria-hidden="true" />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="end"
+            sideOffset={4}
+            className="z-50 grid min-w-28 gap-0.5 rounded-lg border bg-popover p-1 text-sm text-popover-foreground shadow-md"
+          >
+            <DropdownMenu.Item
+              className="cursor-pointer rounded-md px-2 py-1.5 outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+              onSelect={handleExport}
+            >
+              导出备份
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className="cursor-pointer rounded-md px-2 py-1.5 outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+              onSelect={() => fileInput.current?.click()}
+            >
+              导入备份
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
       <input
         ref={fileInput}
         type="file"
@@ -106,6 +130,6 @@ export default function DataButtons() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }
