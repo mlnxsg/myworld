@@ -93,37 +93,34 @@ export default function TodoView() {
             {shown.map((todo) => (
               <li
                 key={todo.id}
-                className="group flex items-start gap-2.5 self-start rounded-xl border border-folder-edge bg-white p-3.5"
+                className="group flex items-center gap-2 self-start rounded-xl border border-folder-edge bg-white px-2.5 py-1.5"
               >
                 <Checkbox
-                  className="mt-1"
                   checked={todo.done}
                   onCheckedChange={(checked) => setTodoDone(todo.id, checked === true)}
                   aria-label={`完成：${todo.title}`}
                 />
-                <div className="min-w-0 flex-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNotice('')
-                      setMovingId(todo.id)
-                    }}
-                    title="转入项目"
-                    className="flex w-full cursor-pointer items-start gap-2 rounded text-left font-heading text-sm font-semibold hover:text-gold"
-                  >
-                    <span className={`min-w-0 wrap-break-word ${todo.done ? 'text-ink/50 line-through' : ''}`}>
-                      {todo.title}
-                    </span>
-                    <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-ink/45" aria-hidden="true" />
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotice('')
+                    setMovingId(todo.id)
+                  }}
+                  title="转入项目"
+                  aria-label={todo.title}
+                  aria-describedby={todo.tags.length ? `todo-tags-${todo.id}` : undefined}
+                  className="min-w-0 flex-1 cursor-pointer rounded text-left font-heading text-sm font-semibold wrap-break-word hover:text-gold"
+                >
+                  <span className={todo.done ? 'text-ink/50 line-through' : undefined}>{todo.title}</span>
                   {todo.tags.length > 0 && (
-                    <ul aria-label="标签" className="mt-1 flex flex-wrap gap-1">
+                    <span id={`todo-tags-${todo.id}`} className="font-sans text-xs font-normal text-gold/80">
                       {todo.tags.map((tag) => (
-                        <li key={tag} className="text-xs text-gold/80">#{tag}</li>
+                        <span key={tag} className="ml-1.5 inline-block max-w-full">#{tag}</span>
                       ))}
-                    </ul>
+                    </span>
                   )}
-                </div>
+                  <ArrowRight className="ml-1.5 inline-block size-3 align-middle text-ink/45" aria-hidden="true" />
+                </button>
                 <div className="flex shrink-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0">
                   <Button
                     size="icon-xs"
@@ -177,9 +174,9 @@ export default function TodoView() {
 
       <Dialog open={moving !== undefined} onOpenChange={(open) => !open && setMovingId(null)}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
+          <DialogHeader className="text-center">
             <DialogTitle>转入项目</DialogTitle>
-            <DialogDescription className="wrap-break-word">{moving?.title}</DialogDescription>
+            <DialogDescription className="sr-only">{moving?.title}</DialogDescription>
           </DialogHeader>
           {moving && (
             <TransferTodoForm
