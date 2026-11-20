@@ -7,6 +7,7 @@ import { X } from 'lucide-react'
 import { Popover } from 'radix-ui'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { addNote, deleteNote, useAllNotes, useAllProjects } from '@/db'
 import { formatDate, formatTime } from '@/lib/format'
@@ -20,21 +21,18 @@ export default function NotesView({ onOpenProject }: Props) {
   const notes = useAllNotes()
   const projects = new Map(useAllProjects().map((project) => [project.id, project]))
 
-  // 把连续的、同一天的说说放进同一组。notes 已经按时间倒序排好，
-  // 所以只需要看"这一条和上一组是不是同一天"。
-  const days: { date: string; notes: Note[] }[] = []
+  // 补写的随手记可能比同一天的其他说说晚录入，按日记日期归组。
+  const notesByDate = new Map<string, Note[]>()
   for (const note of notes) {
-    const date = formatDate(note.createdAt)
-    const lastDay = days[days.length - 1]
-    if (lastDay && lastDay.date === date) {
-      lastDay.notes.push(note)
-    } else {
-      days.push({ date, notes: [note] })
-    }
+    const date = note.diaryDate ?? formatDate(note.createdAt)
+    const group = notesByDate.get(date)
+    if (group) group.push(note)
+    else notesByDate.set(date, [note])
   }
+  const days = [...notesByDate].sort(([a], [b]) => b.localeCompare(a))
 
   const diaryDays = days
-    .map(({ date, notes }) => ({ date, notes: notes.filter((note) => note.projectId === null) }))
+    .map(([date, notes]) => ({ date, notes: notes.filter((note) => note.projectId === null) }))
     .filter((day) => day.notes.length > 0)
 
   return (
@@ -65,19 +63,19 @@ export default function NotesView({ onOpenProject }: Props) {
 
             {notes.length === 0 && <p className="font-heading text-ink/40">暂无说说</p>}
 
-            {days.map((day) => (
-              <section key={day.date}>
+            {days.map(([date, notes]) => (
+              <section key={date}>
                 <h3 className="mb-2 border-b border-ink/10 pb-1 text-xs text-ink/50 tabular-nums">
-                  {day.date}
+                  {date}
                 </h3>
                 <ul className="grid gap-3">
-                  {day.notes.map((note) => {
+                  {notes.map((note) => {
                     const project = note.projectId === null ? undefined : projects.get(note.projectId)
                     return (
                       <li key={note.id} className="group flex gap-3">
-                        <time className="w-10 shrink-0 pt-0.5 text-xs text-ink/40 tabular-nums">
-                          {formatTime(note.createdAt)}
-                        </time>
+                        <div className="w-10 shrink-0 pt-0.5 text-xs text-ink/40 tabular-nums">
+                          {!note.diaryDate && <time>{formatTime(note.createdAt)}</time>}
+                        </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm wrap-break-word whitespace-pre-wrap">{note.content}</p>
                           {project ? (
@@ -141,7 +139,9 @@ function DiaryDay({ date, notes }: { date: string; notes: Note[] }) {
             <ul className="divide-y divide-folder-edge/70">
               {[...notes].reverse().map((note) => (
                 <li key={note.id} className="grid gap-1 py-2.5">
-                  <time className="text-xs text-ink/55 tabular-nums">{formatTime(note.createdAt)}</time>
+                  {!note.diaryDate && (
+                    <time className="text-xs text-ink/55 tabular-nums">{formatTime(note.createdAt)}</time>
+                  )}
                   <p className="text-sm wrap-break-word whitespace-pre-wrap">{note.content}</p>
                 </li>
               ))}
@@ -156,12 +156,15 @@ function DiaryDay({ date, notes }: { date: string; notes: Note[] }) {
 // 顶部的"随手记"输入框
 function QuickNoteForm() {
   const [content, setContent] = useState('')
+  const [selectedDate, setSelectedDate] = useState(() => formatDate(Date.now()))
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (content.trim() === '') return
-    await addNote(null, content.trim()) // null = 不属于任何项目
+    if (content.trim() === '' || selectedDate === '') return
+    const diaryDate = selectedDate === formatDate(Date.now()) ? undefined : selectedDate
+    await addNote(null, content.trim(), diaryDate) // null = 不属于任何项目
     setContent('')
+    setSelectedDate(formatDate(Date.now()))
   }
 
   return (
@@ -173,8 +176,16 @@ function QuickNoteForm() {
         onChange={(e) => setContent(e.target.value)}
         className="bg-white"
       />
-      <div className="flex justify-end">
-        <Button type="submit" size="sm" disabled={content.trim() === ''}>
+      <div className="flex items-center justify-end gap-2">
+        <Input
+          type="date"
+          aria-label="日记日期"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          required
+          className="w-auto bg-white text-ink/70 tabular-nums"
+        />
+        <Button type="submit" size="sm" disabled={content.trim() === '' || selectedDate === ''}>
           添加
         </Button>
       </div>

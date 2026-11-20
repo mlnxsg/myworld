@@ -373,8 +373,10 @@ export async function moveTodoToProject(id: string, projectId: string, score: Sc
 // ---------- 说说 ----------
 
 // projectId 传 null 表示"随手记"：不属于任何项目的说说
-export async function addNote(projectId: string | null, content: string): Promise<void> {
-  await db.notes.add({ id: newId(), projectId, content, createdAt: Date.now() })
+export async function addNote(projectId: string | null, content: string, diaryDate?: string): Promise<void> {
+  const note: Note = { id: newId(), projectId, content, createdAt: Date.now() }
+  if (projectId === null && diaryDate) note.diaryDate = diaryDate
+  await db.notes.add(note)
 }
 
 export async function deleteNote(id: string): Promise<void> {
