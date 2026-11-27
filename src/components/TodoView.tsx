@@ -230,7 +230,7 @@ function TodoRow({
         title="转入项目"
         aria-label={todo.title}
         aria-describedby={todo.tags.length ? tagsId : undefined}
-        className="min-w-0 flex-1 cursor-pointer rounded text-left font-heading text-sm font-semibold wrap-break-word hover:text-gold"
+        className="min-w-0 flex-1 cursor-pointer rounded text-left font-sans text-sm font-light wrap-break-word hover:text-gold"
       >
         <span className={todo.done ? 'text-ink/50 line-through' : undefined}>{todo.title}</span>
         {todo.tags.length > 0 && (

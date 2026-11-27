@@ -1,4 +1,4 @@
-// 项目详情里的"说说"部分。
+// 项目详情里的记录。
 
 import { X } from 'lucide-react'
 import { useState } from 'react'
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { addNote, deleteNote } from '@/db'
 import { formatDateTime } from '@/lib/format'
 import type { Note } from '@/types'
+import DeleteConfirmation from './DeleteConfirmation'
+import NoteContent from './NoteContent'
 
 interface Props {
   projectId: string
@@ -26,7 +28,7 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
 
   return (
     <section>
-      <h3 className="mb-2 font-heading text-base font-semibold">说说</h3>
+      <h3 className="mb-2 font-heading text-base font-semibold">记录</h3>
 
       {!readOnly && (
         <form onSubmit={handleSubmit} className="grid gap-2">
@@ -45,7 +47,7 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
       )}
 
       {notes.length === 0 ? (
-        <p className="py-2 text-sm text-ink/40">暂无说说</p>
+        <p className="py-2 text-sm text-ink/40">暂无记录</p>
       ) : (
         <ul className="mt-2">
           {notes.map((note) => (
@@ -55,19 +57,24 @@ export default function NoteList({ projectId, notes, readOnly }: Props) {
                   {formatDateTime(note.createdAt)}
                 </time>
                 {!readOnly && (
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    className="opacity-30 transition-opacity group-hover:opacity-100"
-                    onClick={() => deleteNote(note.id)}
-                    aria-label="删除这条说说"
+                  <DeleteConfirmation
+                    title="删除这条记录？"
+                    description={note.content}
+                    onConfirm={() => deleteNote(note.id)}
                   >
-                    <X />
-                  </Button>
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      className="opacity-30 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                      aria-label="删除这条记录"
+                    >
+                      <X />
+                    </Button>
+                  </DeleteConfirmation>
                 )}
               </div>
-              {/* whitespace-pre-wrap：保留输入时的换行 */}
-              <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+              <NoteContent note={note} readOnly={readOnly} />
             </li>
           ))}
         </ul>

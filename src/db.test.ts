@@ -83,21 +83,30 @@ test('版本 1 的备份文件也能导入，hunch 会被转换', async () => {
   expect(backup?.projects[0].hunches).toEqual([{ ...oldHunch, id: expect.any(String) }])
 })
 
-test('补写的随手记保留所选日期和录入时间，备份可以恢复', async () => {
-  const { addNote, deleteNote, exportAll, importAll, parseBackup } = await import('./db')
+test('补写的随手记可以更改分类并保留日期和录入时间，备份可以恢复', async () => {
+  const { addNote, deleteNote, exportAll, importAll, parseBackup, updateNote } = await import('./db')
   const before = Date.now()
-  await addNote(null, '补写日记', '2026-10-30')
+  await addNote(null, '补写日记', '2026-10-30', 'diary')
   await addNote(null, '当天随手记')
 
   const backup = await exportAll()
   const backdated = backup.notes.find((note) => note.content === '补写日记')!
   const current = backup.notes.find((note) => note.content === '当天随手记')!
   expect(backdated.diaryDate).toBe('2026-10-30')
+  expect(backdated.category).toBe('diary')
   expect(backdated.createdAt).toBeGreaterThanOrEqual(before)
   expect(current.diaryDate).toBeUndefined()
 
-  await importAll(parseBackup(JSON.stringify(backup))!)
-  expect((await exportAll()).notes).toEqual(backup.notes)
+  await updateNote(backdated.id, '修改后的补写日记', 'thought')
+  const editedBackup = await exportAll()
+  expect(editedBackup.notes.find((note) => note.id === backdated.id)).toEqual({
+    ...backdated,
+    content: '修改后的补写日记',
+    category: 'thought',
+  })
+
+  await importAll(parseBackup(JSON.stringify(editedBackup))!)
+  expect((await exportAll()).notes).toEqual(editedBackup.notes)
   await deleteNote(backdated.id)
   await deleteNote(current.id)
 })

@@ -2,6 +2,17 @@
 
 import { Pencil, X } from 'lucide-react'
 import { useState } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -123,14 +134,25 @@ function TaskRow({ task, readOnly }: { task: Task; readOnly: boolean }) {
           <Button size="icon-xs" variant="ghost" onClick={startEditing} aria-label="编辑事项">
             <Pencil />
           </Button>
-          <Button
-            size="icon-xs"
-            variant="ghost"
-            onClick={() => deleteTask(task.id)}
-            aria-label="删除事项"
-          >
-            <X />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="icon-xs" variant="ghost" aria-label="删除事项">
+                <X />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>删除待办事项？</AlertDialogTitle>
+                <AlertDialogDescription className="wrap-break-word">{task.title}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={() => deleteTask(task.id)}>
+                  删除
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </li>

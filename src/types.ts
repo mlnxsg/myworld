@@ -50,12 +50,15 @@ export interface Todo {
 }
 
 // 说说
+export type NoteCategory = 'diary' | 'thought' | 'cycle'
+
 export interface Note {
   id: string
   projectId: string | null // null 表示"随手记"：不属于任何项目的想法
   content: string
   createdAt: number
   diaryDate?: string // 随手记补写时选择的日期（YYYY-MM-DD）
+  category?: NoteCategory
 }
 
 // 经验总结：沿用 Achievement 和备份中的 achievements 字段

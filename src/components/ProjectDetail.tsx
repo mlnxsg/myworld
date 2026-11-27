@@ -192,7 +192,7 @@ function DetailBody({ projectId, onClose }: { projectId: string; onClose: () => 
           <AlertDialogHeader>
             <AlertDialogTitle>删除「{project.name}」？</AlertDialogTitle>
             <AlertDialogDescription>
-              待办、Ref 和说说将一并删除，且无法恢复。
+              待办、Ref 和记录将一并删除，且无法恢复。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

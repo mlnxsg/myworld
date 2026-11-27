@@ -10,6 +10,7 @@ import { ClipboardPaste, ImagePlus, SquarePen, Star, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { compressImage } from '@/lib/image'
+import DeleteConfirmation from './DeleteConfirmation'
 import ImageEditor from './ImageEditor'
 
 interface Props {
@@ -165,16 +166,21 @@ export default function ImagePicker({
               <Star />
             </Button>
           )}
-          <Button
-            type="button"
-            size="icon-xs"
-            variant="secondary"
-            onClick={() => removeImage(index)}
-            aria-label={`删除第 ${index + 1} 张`}
-            title="删除这张"
+          <DeleteConfirmation
+            title={`删除第 ${index + 1} 张图片？`}
+            description="这张图片将从当前表单中移除。"
+            onConfirm={() => removeImage(index)}
           >
-            <X />
-          </Button>
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="secondary"
+              aria-label={`删除第 ${index + 1} 张`}
+              title="删除这张"
+            >
+              <X />
+            </Button>
+          </DeleteConfirmation>
         </div>
       </div>
     )

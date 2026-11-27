@@ -44,7 +44,7 @@ export default function App() {
             归档区
           </NavButton>
           <NavButton active={view === 'notes'} onClick={() => setView('notes')}>
-            说说
+            记录
           </NavButton>
           <NavButton active={view === 'references'} onClick={() => setView('references')}>
             Ref 库

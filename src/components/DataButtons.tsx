@@ -105,7 +105,7 @@ export default function DataButtons() {
             <AlertDialogTitle>覆盖现有数据？</AlertDialogTitle>
             <AlertDialogDescription>
               {pending &&
-                `备份于 ${formatDate(pending.exportedAt)}：项目 ${pending.projects.length} · 项目待办 ${pending.tasks.length} · 独立待办 ${pending.todos.length} · 说说 ${pending.notes.length} · 经验总结 ${pending.achievements.length} · Ref ${pending.references.length} · 我的日常 ${pending.routines.length}。`}
+                `备份于 ${formatDate(pending.exportedAt)}：项目 ${pending.projects.length} · 项目待办 ${pending.tasks.length} · 独立待办 ${pending.todos.length} · 记录 ${pending.notes.length} · 经验总结 ${pending.achievements.length} · Ref ${pending.references.length} · 我的日常 ${pending.routines.length}。`}
               现有内容将被全部替换，且无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>

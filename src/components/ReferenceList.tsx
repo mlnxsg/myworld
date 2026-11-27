@@ -3,12 +3,13 @@
 // 每条都可以编辑：在卡片原地改文字、删图、加图、裁切或标记。
 
 import { Pencil, X } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { addReference, deleteReference, markReferenceViewed, updateReference, useReferences } from '@/db'
 import { formatDateTime } from '@/lib/format'
 import type { Reference } from '@/types'
+import DeleteConfirmation from './DeleteConfirmation'
 import ImagePicker from './ImagePicker'
 import Lightbox from './Lightbox'
 import LinkifiedText from './LinkifiedText'
@@ -91,11 +92,7 @@ export function ReferenceCard({
         </div>
       )}
 
-      {reference.text && (
-        <p className="text-sm break-words whitespace-pre-wrap">
-          <LinkifiedText text={reference.text} />
-        </p>
-      )}
+      {reference.text && <ReferenceText text={reference.text} />}
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <time className="text-xs text-ink/40 tabular-nums">{formatDateTime(reference.createdAt)}</time>
@@ -116,14 +113,15 @@ export function ReferenceCard({
             <Button size="icon-xs" variant="ghost" onClick={onEdit} aria-label="编辑这条 Ref">
               <Pencil />
             </Button>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              onClick={() => deleteReference(reference.id)}
-              aria-label="删除这条 Ref"
+            <DeleteConfirmation
+              title="删除这条 Ref？"
+              description={reference.text || undefined}
+              onConfirm={() => deleteReference(reference.id)}
             >
-              <X />
-            </Button>
+              <Button type="button" size="icon-xs" variant="ghost" aria-label="删除这条 Ref">
+                <X />
+              </Button>
+            </DeleteConfirmation>
           </div>
         )}
       </div>
@@ -134,6 +132,57 @@ export function ReferenceCard({
         onClose={() => setViewingIndex(null)}
       />
     </li>
+  )
+}
+
+function ReferenceText({ text }: { text: string }) {
+  const textId = useId()
+  const textRef = useRef<HTMLParagraphElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  const [hasMoreLines, setHasMoreLines] = useState(false)
+
+  useLayoutEffect(() => {
+    const paragraph = textRef.current
+    if (!paragraph) return
+
+    const measure = () => {
+      const lineHeight = Number.parseFloat(getComputedStyle(paragraph).lineHeight)
+      setHasMoreLines(paragraph.scrollHeight > Math.ceil(4 * lineHeight))
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(paragraph)
+    document.fonts.addEventListener('loadingdone', measure)
+    return () => {
+      observer.disconnect()
+      document.fonts.removeEventListener('loadingdone', measure)
+    }
+  }, [text])
+
+  return (
+    <div className="min-w-0">
+      <p
+        id={textId}
+        ref={textRef}
+        className={`text-sm break-words whitespace-pre-wrap ${expanded ? '' : 'line-clamp-4'}`}
+      >
+        <LinkifiedText text={text} />
+      </p>
+      {hasMoreLines && (
+        <Button
+          type="button"
+          size="xs"
+          variant="ghost"
+          className="mt-1"
+          aria-controls={textId}
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          <span className="text-[#8a5a2b]">{expanded ? '收起' : '展开全文'}</span>
+        </Button>
+      )}
+    </div>
   )
 }
 

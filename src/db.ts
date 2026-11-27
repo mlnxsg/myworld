@@ -9,6 +9,7 @@ import type {
   BackupFile,
   Hunch,
   Note,
+  NoteCategory,
   Project,
   Reference,
   Retro,
@@ -373,10 +374,23 @@ export async function moveTodoToProject(id: string, projectId: string, score: Sc
 // ---------- 说说 ----------
 
 // projectId 传 null 表示"随手记"：不属于任何项目的说说
-export async function addNote(projectId: string | null, content: string, diaryDate?: string): Promise<void> {
+export async function addNote(
+  projectId: string | null,
+  content: string,
+  diaryDate?: string,
+  category?: NoteCategory,
+): Promise<void> {
   const note: Note = { id: newId(), projectId, content, createdAt: Date.now() }
-  if (projectId === null && diaryDate) note.diaryDate = diaryDate
+  if (projectId === null) {
+    if (diaryDate) note.diaryDate = diaryDate
+    if (category) note.category = category
+  }
   await db.notes.add(note)
+}
+
+export async function updateNote(id: string, content: string, category?: NoteCategory): Promise<void> {
+  const updated = await db.notes.update(id, category === undefined ? { content } : { content, category })
+  if (updated === 0) throw new Error('这条记录已不存在。')
 }
 
 export async function deleteNote(id: string): Promise<void> {
